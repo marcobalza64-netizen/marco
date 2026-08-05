@@ -1,0 +1,17 @@
+{
+  "name": "marco",
+  "install": "npm install",
+  "terminals": [
+    {
+      "name": "dev-server",
+      "command": "npm run dev",
+      "description": "Runs the marco web app on http://localhost:3000 with auto-reload."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 3000
+    }
+  ]
+}

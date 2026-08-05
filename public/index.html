@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Marco</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="card">
+      <h1 class="title">Marco<span class="dot">.</span></h1>
+      <p class="subtitle">Type <code>Marco</code> and press the button.</p>
+
+      <form id="marco-form" autocomplete="off">
+        <input
+          id="message"
+          name="message"
+          type="text"
+          placeholder="Marco"
+          aria-label="Your message"
+        />
+        <button type="submit">Call out</button>
+      </form>
+
+      <p id="reply" class="reply" role="status" aria-live="polite"></p>
+    </main>
+
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
