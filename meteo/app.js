@@ -402,6 +402,12 @@
     ].join("");
   }
 
+  function hasLocalApi() {
+    const { protocol, hostname } = window.location;
+    return (protocol === "http:" || protocol === "https:") &&
+      (hostname === "127.0.0.1" || hostname === "localhost");
+  }
+
   async function loadWeather() {
     document.body.classList.add("is-loading");
     els.refreshBtn.disabled = true;
@@ -409,16 +415,19 @@
 
     try {
       let data = null;
-      let lastError = null;
 
-      try {
-        const res = await fetch(`/api/weather?t=${Date.now()}`, { cache: "no-store" });
-        const payload = await res.json();
-        if (!res.ok) throw new Error(payload.error || `Errore server ${res.status}`);
-        data = payload;
-      } catch (err) {
-        lastError = err;
-        console.warn("API locale non disponibile, provo Open-Meteo diretto…", err);
+      if (hasLocalApi()) {
+        try {
+          const res = await fetch(`/api/weather?t=${Date.now()}`, { cache: "no-store" });
+          const payload = await res.json();
+          if (!res.ok) throw new Error(payload.error || `Errore server ${res.status}`);
+          data = payload;
+        } catch (err) {
+          console.warn("API locale non disponibile, uso Open-Meteo diretto…", err);
+          data = await fetchDirectOpenMeteo();
+        }
+      } else {
+        // GitHub Pages, file aperti, o link condiviso: dati diretti dal browser
         data = await fetchDirectOpenMeteo();
       }
 
@@ -427,15 +436,12 @@
       renderDaily(data);
       renderMarine(data);
       setStatus(true, "Live");
-      if (data.via === "browser" && lastError) {
-        els.updatedAt.textContent = `${els.updatedAt.textContent} · fallback browser`;
-      }
     } catch (err) {
       console.error(err);
       setStatus(false, "Errore");
       const msg = err && err.message ? err.message : "Impossibile caricare i dati meteo.";
       els.updatedAt.textContent =
-        `${msg} — Controlla la connessione internet e riavvia con avvia_meteo.command (non aprire solo il file HTML).`;
+        `${msg} — Serve una connessione internet. Su Windows usa avvia_meteo.bat; su Mac avvia_meteo.command.`;
     } finally {
       document.body.classList.remove("is-loading");
       els.refreshBtn.disabled = false;

@@ -1,49 +1,48 @@
 # Meteo Bordighera
 
-App web per vedere **tutti i dati meteo e le previsioni** di Bordighera (Liguria): condizioni attuali, prossime ore, 14 giorni e stato del mare.
+App web per vedere **meteo e previsioni** di Bordighera (Liguria): ora, prossime ore, 14 giorni e mare.
 
-**Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac/PC.
+**Non serve installare librerie** (niente pip).
 
-> Nel ZIP del repository c’è anche l’app NVIDIA (`avvia_web.command`).  
-> Per il **meteo** usa solo **`avvia_meteo.command`**.
-
-## Cosa mostra
-- Temperatura, percepita, umidità, pressione, UV, visibilità
-- Vento, raffiche e direzione
-- Previsione oraria (24 ore)
-- Previsione giornaliera (14 giorni)
-- Mare: temperatura acqua, altezza e periodo onde
-- Alba e tramonto
-
-## Fonti dati
-- [Open-Meteo](https://open-meteo.com/) (licenza CC BY 4.0)
-- Coordinate: Bordighera · 43.78°N, 7.66°E · fuso `Europe/Rome`
+> Nel ZIP c’è anche l’app NVIDIA. Per il **meteo** usa solo i file `avvia_meteo.*`.
 
 ---
 
-## Avvio (meteo)
+## Importante: come condividere
 
-1. Scarica lo ZIP:  
+`http://127.0.0.1:8787` funziona **solo sul computer che ha avviato l’app**.  
+Se lo invii a un’altra persona, vedrà **“non c’è indirizzo” / sito non raggiungibile**.
+
+### Opzione A — Link pubblico (consigliata)
+Dopo il deploy GitHub Pages, condividi questo indirizzo:
+
+**https://marcobalza64-netizen.github.io/marco/**
+
+(La prima volta su GitHub: **Settings → Pages → Source: GitHub Actions**, poi aspetta il deploy.)
+
+### Opzione B — Invia lo ZIP (ognuno lo avvia sul proprio PC)
+
+1. Scarica:  
    https://codeload.github.com/marcobalza64-netizen/marco/zip/refs/heads/cursor/meteo-bordighera-0955  
-2. Estrai la cartella  
-3. **Doppio clic** su `avvia_meteo.command`  
-   (se il Mac blocca: tasto destro → **Apri** → **Apri**)
+2. Invia lo ZIP alla persona  
+3. Lei estrae e avvia:
 
-Si apre la pagina `http://127.0.0.1:8787`.  
-Per uscire: nel Terminale premi `Ctrl + C`.
+| Sistema | File da aprire |
+|--------|-----------------|
+| **Windows** | doppio clic su `avvia_meteo.bat` |
+| **Mac** | doppio clic su `avvia_meteo.command` |
 
-Oppure da Terminale:
+Su Windows serve [Python](https://www.python.org/downloads/) con la spunta **Add python.exe to PATH**.
 
-```bash
-cd ~/Downloads/marco-cursor-meteo-bordighera-0955
-python3 meteo_app.py
-```
+Si apre `http://127.0.0.1:8787` **sul suo** computer (non sul tuo).
 
-### Se vedi la pagina ma senza dati
-- Serve internet (i dati arrivano da Open-Meteo)
-- Non aprire solo `meteo/index.html`: va avviato il server con `avvia_meteo.command`
-- Premi **Aggiorna** nella pagina
+---
 
-## Nota
+## Cosa mostra
+- Temperatura, percepita, umidità, pressione, UV, visibilità
+- Vento e raffiche
+- Previsione oraria (24 ore) e giornaliera (14 giorni)
+- Mare: temperatura acqua e onde
+- Alba e tramonto
 
-Solo a scopo informativo. I dati meteo possono variare rispetto ad altre fonti.
+Dati: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0) · Bordighera 43.78°N, 7.66°E
