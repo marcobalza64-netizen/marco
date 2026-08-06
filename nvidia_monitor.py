@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import ssl
+import subprocess
 import sys
 import time
 import urllib.error
@@ -63,6 +65,54 @@ def clear() -> None:
     sys.stdout.flush()
 
 
+def download_json(url: str) -> dict:
+    """Scarica JSON. Su Mac evita errori certificato SSL di Python."""
+    errors: list[str] = []
+
+    # 1) curl del sistema (sul Mac usa i certificati Apple → di solito funziona)
+    try:
+        completed = subprocess.run(
+            [
+                "curl",
+                "-fsSL",
+                "--max-time",
+                "15",
+                "-A",
+                UA,
+                url,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode == 0 and completed.stdout.strip():
+            return json.loads(completed.stdout)
+        err = (completed.stderr or completed.stdout or f"curl exit {completed.returncode}").strip()
+        errors.append(f"curl: {err}")
+    except FileNotFoundError:
+        errors.append("curl: non trovato")
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"curl: {exc}")
+
+    # 2) urllib con certificati normali
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"urllib: {exc}")
+
+    # 3) urllib senza verifica SSL (solo se i certificati Python sul Mac sono rotti)
+    try:
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"urllib-insecure: {exc}")
+
+    raise RuntimeError(" | ".join(errors))
+
+
 def fetch_quote(market_key: str) -> Quote:
     market = MARKETS[market_key]
     symbol = market["symbol"]
@@ -70,9 +120,7 @@ def fetch_quote(market_key: str) -> Quote:
         "https://query1.finance.yahoo.com/v8/finance/chart/"
         f"{symbol}?interval=1d&range=5d"
     )
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    with urllib.request.urlopen(req, timeout=15) as resp:
-        data = json.loads(resp.read().decode("utf-8"))
+    data = download_json(url)
 
     result = data["chart"]["result"][0]
     meta = result["meta"]
@@ -245,7 +293,7 @@ def main() -> int:
         try:
             last_quote = fetch_quote(args.market)
             last_error = None
-        except (urllib.error.URLError, urllib.error.HTTPError, KeyError, IndexError, ValueError) as exc:
+        except Exception as exc:  # noqa: BLE001 - mostriamo qualsiasi errore rete/dati
             last_error = str(exc)
 
         if last_quote is None:
