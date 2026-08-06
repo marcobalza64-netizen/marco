@@ -15,25 +15,51 @@ App Python in tempo reale per seguire il valore delle azioni **NVIDIA** sui merc
 
 ## Come scaricarla da GitHub (Mac)
 
-Apri **Terminale** sul Mac (`Applicazioni → Utility → Terminale`) e copia/incolla:
+### Modo più semplice (consigliato)
+
+1. Vai su https://github.com/marcobalza64-netizen/marco  
+2. Clicca **Code → Download ZIP** ed estrai lo ZIP  
+3. Apri la cartella `marco-main`  
+4. **Doppio clic** sul file `avvia.command`  
+5. Se il Mac blocca l’apertura: tasto destro → **Apri** → **Apri**
+
+Lo script installa da solo `yfinance` e avvia il monitor.  
+Per uscire: `Ctrl + C`.
+
+### Da Terminale
+
+Apri **Terminale** (`Applicazioni → Utility → Terminale`) e copia/incolla **tutto** questo blocco:
 
 ```bash
-# 1) Scarica il progetto
-git clone https://github.com/marcobalza64-netizen/marco.git
-cd marco
-
-# 2) (Consigliato) Crea un ambiente virtuale
+cd ~/Downloads/marco-main 2>/dev/null || cd ~/marco 2>/dev/null || cd marco
 python3 -m venv .venv
 source .venv/bin/activate
-
-# 3) Installa le dipendenze
-pip install -r requirements.txt
-
-# 4) Avvia il monitor (Xetra / Europa, in euro)
+python -m pip install -r requirements.txt
 python nvidia_monitor.py
 ```
 
-Per uscire: premi `Ctrl + C`.
+> Importante: usa sempre `source .venv/bin/activate` **prima** di `python nvidia_monitor.py`,  
+> altrimenti compare l’errore `No module named 'yfinance'`.
+
+### Errore: `No module named 'yfinance'`
+
+Nel Terminale, nella cartella del progetto, esegui:
+
+```bash
+cd ~/Downloads/marco-main
+python3 -m pip install -r requirements.txt
+python3 nvidia_monitor.py
+```
+
+Oppure (meglio, con ambiente virtuale):
+
+```bash
+cd ~/Downloads/marco-main
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python nvidia_monitor.py
+```
 
 ### Se non hai Python sul Mac
 
