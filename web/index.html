@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NVIDIA — Monitor Europa</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="atmosphere" aria-hidden="true"></div>
+
+  <main class="stage">
+    <header class="brand-block">
+      <p class="live-pill" id="livePill">
+        <span class="pulse" aria-hidden="true"></span>
+        <span id="liveText">TEMPO REALE</span>
+      </p>
+      <h1 class="brand">NVIDIA</h1>
+      <p class="tagline" id="marketName">Xetra (Europa)</p>
+    </header>
+
+    <section class="price-block" aria-live="polite">
+      <p class="price" id="price">—</p>
+      <p class="change" id="change">—</p>
+      <p class="trade-meta" id="tradeMeta">Caricamento quotazione…</p>
+    </section>
+
+    <nav class="markets" id="markets" aria-label="Scegli mercato"></nav>
+
+    <section class="stats" id="stats" aria-label="Dettagli">
+      <div>
+        <span>Bid / Ask</span>
+        <strong id="bidAsk">—</strong>
+      </div>
+      <div>
+        <span>Apertura</span>
+        <strong id="open">—</strong>
+      </div>
+      <div>
+        <span>Massimo</span>
+        <strong id="high">—</strong>
+      </div>
+      <div>
+        <span>Minimo</span>
+        <strong id="low">—</strong>
+      </div>
+      <div>
+        <span>Volume</span>
+        <strong id="volume">—</strong>
+      </div>
+      <div>
+        <span>Fonte</span>
+        <strong id="source">—</strong>
+      </div>
+    </section>
+
+    <p class="footer-note">Aggiornamento automatico ogni 2s · Solo uso informativo</p>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
