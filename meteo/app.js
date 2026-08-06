@@ -79,28 +79,95 @@
     return `${(Number(m) / 1000).toFixed(1)} km`;
   }
 
-  function parseLocal(iso) {
+  const TZ = "Europe/Rome";
+
+  /** Open-Meteo returns wall-clock times in Europe/Rome without an offset. */
+  function parseRome(iso) {
     if (!iso) return null;
-    return new Date(iso);
+    if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) return new Date(iso);
+
+    const m = iso.match(
+      /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?/
+    );
+    if (!m) return new Date(iso);
+
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    const hour = Number(m[4] || 12);
+    const minute = Number(m[5] || 0);
+    const second = Number(m[6] || 0);
+
+    // Find the UTC instant whose Rome wall-clock matches this local time.
+    let guess = Date.UTC(year, month - 1, day, hour, minute, second);
+    for (let i = 0; i < 3; i += 1) {
+      const parts = romeParts(new Date(guess));
+      const asUtc = Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hour,
+        parts.minute,
+        parts.second
+      );
+      const target = Date.UTC(year, month - 1, day, hour, minute, second);
+      guess += target - asUtc;
+    }
+    return new Date(guess);
+  }
+
+  function romeParts(date) {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hourCycle: "h23",
+    }).formatToParts(date);
+    const get = (type) => parts.find((p) => p.type === type)?.value;
+    return {
+      year: Number(get("year")),
+      month: Number(get("month")),
+      day: Number(get("day")),
+      hour: Number(get("hour")),
+      minute: Number(get("minute")),
+      second: Number(get("second")),
+    };
   }
 
   function formatClock(date) {
     if (!date) return "—";
-    return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: TZ,
+    });
   }
 
   function formatDayName(date, index) {
     if (!date) return "—";
     if (index === 0) return "Oggi";
     if (index === 1) return "Domani";
-    const name = date.toLocaleDateString("it-IT", { weekday: "long", day: "numeric", month: "short" });
+    const name = date.toLocaleDateString("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      timeZone: TZ,
+    });
     return name.charAt(0).toUpperCase() + name.slice(1);
   }
 
   function formatHourLabel(date, isNow) {
     if (!date) return "—";
     if (isNow) return "Ora";
-    return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+    return date.toLocaleTimeString("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: TZ,
+    });
   }
 
   function setStatus(ok, text) {
@@ -126,7 +193,7 @@
     els.condition.textContent = weatherLabel(code);
     els.feels.textContent = `Percepita ${fmtTemp(cur.apparent_temperature)} · Umidità ${fmtNum(cur.relative_humidity_2m, 0, "%")}`;
 
-    const fetched = parseLocal(data.fetched_at);
+    const fetched = parseRome(data.fetched_at);
     els.updatedAt.textContent = fetched
       ? `Aggiornato alle ${formatClock(fetched)} · fonte Open-Meteo`
       : "Dati aggiornati";
@@ -144,8 +211,8 @@
       metric("Pioggia ora", fmtNum(cur.rain, 1, " mm")),
     ].join("");
 
-    const sunrise = daily.sunrise && daily.sunrise[0] ? parseLocal(daily.sunrise[0]) : null;
-    const sunset = daily.sunset && daily.sunset[0] ? parseLocal(daily.sunset[0]) : null;
+    const sunrise = daily.sunrise && daily.sunrise[0] ? parseRome(daily.sunrise[0]) : null;
+    const sunset = daily.sunset && daily.sunset[0] ? parseRome(daily.sunset[0]) : null;
     els.sun.innerHTML = [
       metric("Alba", formatClock(sunrise)),
       metric("Tramonto", formatClock(sunset)),
@@ -158,13 +225,16 @@
     const h = data.forecast.hourly || {};
     const times = h.time || [];
     const now = Date.now();
-    let start = times.findIndex((t) => parseLocal(t).getTime() >= now - 30 * 60 * 1000);
+    let start = times.findIndex((t) => {
+      const dt = parseRome(t);
+      return dt && dt.getTime() >= now - 30 * 60 * 1000;
+    });
     if (start < 0) start = 0;
     const end = Math.min(start + 24, times.length);
 
     const chunks = [];
     for (let i = start; i < end; i += 1) {
-      const date = parseLocal(times[i]);
+      const date = parseRome(times[i]);
       const isNow = i === start;
       chunks.push(`
         <article class="hour">
@@ -182,7 +252,7 @@
     const d = data.forecast.daily || {};
     const times = d.time || [];
     const rows = times.map((t, i) => {
-      const date = parseLocal(t);
+      const date = parseRome(t);
       return `
         <article class="day">
           <div class="name">${formatDayName(date, i)}</div>
