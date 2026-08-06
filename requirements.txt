@@ -1,2 +1,2 @@
-yfinance>=0.2.40
-rich>=13.7.0
+# Nessuna dipendenza esterna richiesta.
+# L'app usa solo la libreria standard di Python.
