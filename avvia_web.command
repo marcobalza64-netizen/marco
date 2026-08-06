@@ -1,6 +1,9 @@
 #!/bin/bash
-# Mac: doppio clic per aprire il monitor NVIDIA nel browser
+# Mac: tasto destro → Apri  (se dice "autore non identificato")
 cd "$(dirname "$0")"
+
+# Rimuove il blocco quarantena di macOS su questa cartella
+xattr -cr . >/dev/null 2>&1 || true
 
 echo "=== Monitor NVIDIA Web ==="
 echo

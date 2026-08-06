@@ -17,25 +17,41 @@ Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.
 
 1. Vai su: https://github.com/marcobalza64-netizen/marco  
 2. **Code → Download ZIP** ed estrai  
-3. **Doppio clic** su `avvia_web.command`  
-   (se il Mac blocca: tasto destro → **Apri** → **Apri**)
+3. Apri la cartella `marco-main`  
+4. Avvia come sotto 👇
 
-Si apre la pagina `http://127.0.0.1:8765` con il prezzo live.  
-Per uscire: nel Terminale premi `Ctrl + C`.
+### Se il Mac dice “autore non identificato” / “non si può aprire”
 
-Oppure da Terminale:
+È normale per i file scaricati da internet. **Non è un virus.**
+
+**Modo A (più semplice)**  
+1. Sul file `avvia_web.command` fai **tasto destro** (o Control + clic)  
+2. Scegli **Apri**  
+3. Nella finestra conferma di nuovo **Apri**
+
+**Modo B (Impostazioni)**  
+1. Prova ad aprirlo una volta (anche se si blocca)  
+2. Vai su **Impostazioni di Sistema → Privacy e sicurezza**  
+3. In basso trovi il messaggio sul file bloccato → clicca **Apri comunque**
+
+**Modo C (sempre funziona — Terminale)**  
+Apri **Terminale** e incolla:
 
 ```bash
 cd ~/Downloads/marco-main
+xattr -cr .
 python3 web_app.py
 ```
+
+Il browser si apre da solo su `http://127.0.0.1:8765`.  
+Per uscire: `Ctrl + C`.
 
 ---
 
 ## Versione Terminale
 
-- **Doppio clic** su `avvia.command`  
-  oppure:
+Stesso discorso sul blocco Mac: **tasto destro → Apri** su `avvia.command`,  
+oppure:
 
 ```bash
 cd ~/Downloads/marco-main
@@ -55,7 +71,7 @@ python3 nvidia_monitor.py -i 1         # aggiorna ogni 1 secondo
 ## Se manca Python
 
 Scarica Python da https://www.python.org/downloads/  
-Installa, poi ripeti il doppio clic su `avvia_web.command`.
+Installa, poi riprova.
 
 ## Nota
 
