@@ -1,3 +1,604 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meteo Bordighera</title>
+  <meta name="description" content="Meteo e previsioni in tempo reale per Bordighera: temperatura, vento, mare, UV e 14 giorni." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --ink: #14252f;
+  --ink-soft: #3d5563;
+  --foam: #f4f8fb;
+  --sea-deep: #0b3a4a;
+  --sea: #1a6b7c;
+  --sea-mid: #2f8fa0;
+  --sea-light: #7ec8d4;
+  --sun: #e8b15a;
+  --sun-soft: #f2d29a;
+  --sand: #d9c4a0;
+  --danger: #c45c3e;
+  --ok: #2f8a6a;
+  --line: rgba(20, 37, 47, 0.12);
+  --glass: rgba(244, 248, 251, 0.72);
+  --shadow: 0 18px 50px rgba(11, 58, 74, 0.14);
+  --radius: 18px;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Figtree", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(232, 177, 90, 0.28), transparent 55%),
+    radial-gradient(900px 500px at 10% 20%, rgba(126, 200, 212, 0.35), transparent 50%),
+    linear-gradient(180deg, #d7ebf0 0%, #eef5f7 42%, #f7f3ea 100%);
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--sea);
+}
+
+.sky {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.sky-glow {
+  position: absolute;
+  width: 48vmax;
+  height: 48vmax;
+  top: -18vmax;
+  right: -8vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 177, 90, 0.55), rgba(232, 177, 90, 0) 68%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+.sky-haze {
+  position: absolute;
+  inset: auto 0 28% 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: haze 12s ease-in-out infinite alternate;
+}
+
+.sea-band {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -8%;
+  height: 34%;
+  background:
+    linear-gradient(180deg, rgba(47, 143, 160, 0.08), rgba(11, 58, 74, 0.22)),
+    repeating-linear-gradient(
+      95deg,
+      rgba(255, 255, 255, 0.08) 0 18px,
+      transparent 18px 42px
+    );
+  transform: skewY(-3deg);
+  animation: swell 10s ease-in-out infinite alternate;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--sea-mid);
+  box-shadow: 0 0 0 0 rgba(47, 143, 160, 0.5);
+  animation: pulse 2s ease-out infinite;
+}
+
+.status.is-error .pulse {
+  background: var(--danger);
+  animation: none;
+}
+
+.refresh {
+  appearance: none;
+  border: 1px solid rgba(11, 58, 74, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--sea-deep);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.refresh:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(11, 58, 74, 0.28);
+}
+
+.refresh:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3.5rem;
+}
+
+.hero {
+  min-height: calc(100vh - 5.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem 0 3rem;
+  animation: rise 0.9s ease both;
+}
+
+.place-line {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sea);
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4.2rem, 14vw, 8.5rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--sea-deep);
+}
+
+.headline {
+  margin: 0.85rem 0 0;
+  max-width: 28rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.hero-now {
+  margin-top: 2.4rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.temp {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 10vw, 5.8rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.condition {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.feels {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.cta-hint {
+  margin: 1.8rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.section {
+  margin-top: 2.75rem;
+  animation: rise 0.8s ease both;
+  animation-delay: 0.12s;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.section-head p {
+  margin: 0.45rem 0 1.35rem;
+  max-width: 36rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.metric {
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.metric span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.metric strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.hourly-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(92px, 110px);
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.25rem 0 1rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hour {
+  scroll-snap-align: start;
+  padding: 1rem 0.65rem;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  min-height: 150px;
+}
+
+.hour .when {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sea);
+}
+
+.hour .deg {
+  display: block;
+  margin: 0.7rem 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+}
+
+.hour .label,
+.hour .rain {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.daily-list {
+  display: grid;
+  gap: 0;
+}
+
+.day {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr 0.9fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.day:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.day .name {
+  font-weight: 700;
+}
+
+.day .desc {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.day .temps {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+}
+
+.day .temps small {
+  margin-left: 0.35rem;
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.day .extra {
+  text-align: right;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.marine,
+.sun-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.5rem;
+}
+
+.marine-item,
+.sun-item {
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.marine-item span,
+.sun-item span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.marine-item strong,
+.sun-item strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.3rem;
+}
+
+.note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin: 0.25rem 0;
+}
+
+.coords {
+  font-variant-numeric: tabular-nums;
+}
+
+body.is-loading .hero-now,
+body.is-loading .metrics,
+body.is-loading .hourly-scroll,
+body.is-loading .daily-list,
+body.is-loading .marine,
+body.is-loading .sun-grid {
+  opacity: 0.45;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 143, 160, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(47, 143, 160, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 143, 160, 0);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4%, 6%, 0) scale(1.08);
+  }
+}
+
+@keyframes haze {
+  from {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.7;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes swell {
+  from {
+    transform: skewY(-3deg) translateY(0);
+  }
+  to {
+    transform: skewY(-2deg) translateY(-10px);
+  }
+}
+
+@media (min-width: 760px) {
+  .metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .marine,
+  .sun-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .day {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .day .extra {
+    text-align: left;
+    grid-column: 1 / -1;
+  }
+
+  .brand {
+    font-size: clamp(3.6rem, 18vw, 5.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="sky-glow"></div>
+    <div class="sky-haze"></div>
+    <div class="sea-band"></div>
+  </div>
+
+  <header class="topbar">
+    <p class="status" id="status">
+      <span class="pulse" aria-hidden="true"></span>
+      <span id="statusText">Caricamento…</span>
+    </p>
+    <button type="button" class="refresh" id="refreshBtn" aria-label="Aggiorna dati">Aggiorna</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="brand">
+      <p class="place-line" id="placeLine">Liguria · Riviera dei Fiori</p>
+      <h1 class="brand" id="brand">Bordighera</h1>
+      <p class="headline" id="headline">Meteo e previsioni sulla costa</p>
+      <div class="hero-now" aria-live="polite">
+        <p class="temp" id="temp">—°</p>
+        <p class="condition" id="condition">—</p>
+        <p class="feels" id="feels">—</p>
+      </div>
+      <p class="cta-hint" id="updatedAt">Attendere i dati da Open-Meteo…</p>
+    </section>
+
+    <section class="section" aria-labelledby="now-title">
+      <div class="section-head">
+        <h2 id="now-title">Ora a Bordighera</h2>
+        <p>Temperatura, vento, umidità, pressione e UV in questo momento.</p>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </section>
+
+    <section class="section" aria-labelledby="hourly-title">
+      <div class="section-head">
+        <h2 id="hourly-title">Prossime ore</h2>
+        <p>Andamento temperatura, probabilità di pioggia e vento.</p>
+      </div>
+      <div class="hourly-scroll" id="hourly" tabindex="0" aria-label="Previsione oraria"></div>
+    </section>
+
+    <section class="section" aria-labelledby="daily-title">
+      <div class="section-head">
+        <h2 id="daily-title">Prossimi 14 giorni</h2>
+        <p>Massime, minime, precipitazioni e vento dominante.</p>
+      </div>
+      <div class="daily-list" id="daily"></div>
+    </section>
+
+    <section class="section" aria-labelledby="marine-title">
+      <div class="section-head">
+        <h2 id="marine-title">Mare</h2>
+        <p>Temperatura dell’acqua e stato del mare davanti a Bordighera.</p>
+      </div>
+      <div class="marine" id="marine"></div>
+    </section>
+
+    <section class="section sun-section" aria-labelledby="sun-title">
+      <div class="section-head">
+        <h2 id="sun-title">Sole e giornata</h2>
+        <p>Alba, tramonto e indici utili per uscire.</p>
+      </div>
+      <div class="sun-grid" id="sun"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>File unico HTML · doppio clic per aprire · dati da <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · serve internet</p>
+    <p class="coords" id="coords">43.78°N · 7.66°E · Europe/Rome</p>
+  </footer>
+
+  <script>
 (() => {
   "use strict";
 
@@ -461,3 +1062,7 @@
   loadWeather();
   schedule();
 })();
+
+  </script>
+</body>
+</html>
