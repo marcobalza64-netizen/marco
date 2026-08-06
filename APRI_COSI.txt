@@ -1,0 +1,21 @@
+SE IL MAC DICE "AUTORE NON IDENTIFICATO"
+========================================
+
+È normale. Il Mac blocca i file scaricati da Internet.
+
+SOLUZIONE FACILE
+----------------
+1) Sul file avvia_web.command fai TASTO DESTRO (o Control+clic)
+2) Scegli "Apri"
+3) Conferma di nuovo "Apri"
+
+Poi il browser si apre da solo con il prezzo NVIDIA.
+
+
+OPPURE USA IL TERMINALE (funziona sempre)
+----------------------------------------
+Apri Terminale e incolla queste 3 righe:
+
+cd ~/Downloads/marco-main
+xattr -cr .
+python3 web_app.py
