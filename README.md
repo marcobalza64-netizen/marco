@@ -42,6 +42,11 @@ python3 nvidia_monitor.py -i 10        # aggiorna ogni 10 secondi
 Scarica Python da https://www.python.org/downloads/  
 Installa, poi ripeti il doppio clic su `avvia.command`.
 
+## Se compare "certificate verify failed"
+
+Scarica di nuovo lo ZIP aggiornato da GitHub (dopo il merge di questa correzione) e riavvia.  
+La nuova versione usa `curl` del Mac e non dipende più dai certificati rotti di Python.
+
 ## Nota
 
 Dati da Yahoo Finance (near real-time). Solo a scopo informativo, non è un consiglio finanziario.
