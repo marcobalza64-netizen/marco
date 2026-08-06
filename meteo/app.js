@@ -51,7 +51,127 @@
   };
 
   const REFRESH_MS = 10 * 60 * 1000;
+  const LOCATION = {
+    name: "Bordighera",
+    region: "Liguria, Italia",
+    latitude: 43.7804,
+    longitude: 7.6632,
+    timezone: "Europe/Rome",
+  };
   let timer = null;
+
+  function buildOpenMeteoUrls() {
+    const common = new URLSearchParams({
+      latitude: String(LOCATION.latitude),
+      longitude: String(LOCATION.longitude),
+      timezone: LOCATION.timezone,
+    });
+
+    const forecast = new URLSearchParams(common);
+    forecast.set("forecast_days", "14");
+    forecast.set("wind_speed_unit", "kmh");
+    forecast.set(
+      "current",
+      [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "is_day",
+        "precipitation",
+        "rain",
+        "showers",
+        "snowfall",
+        "weather_code",
+        "cloud_cover",
+        "pressure_msl",
+        "surface_pressure",
+        "wind_speed_10m",
+        "wind_direction_10m",
+        "wind_gusts_10m",
+        "uv_index",
+        "visibility",
+      ].join(",")
+    );
+    forecast.set(
+      "hourly",
+      [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "precipitation_probability",
+        "precipitation",
+        "weather_code",
+        "cloud_cover",
+        "wind_speed_10m",
+        "wind_direction_10m",
+        "wind_gusts_10m",
+        "uv_index",
+        "is_day",
+      ].join(",")
+    );
+    forecast.set(
+      "daily",
+      [
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "apparent_temperature_max",
+        "apparent_temperature_min",
+        "sunrise",
+        "sunset",
+        "uv_index_max",
+        "precipitation_sum",
+        "precipitation_probability_max",
+        "rain_sum",
+        "showers_sum",
+        "snowfall_sum",
+        "precipitation_hours",
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max",
+        "wind_direction_10m_dominant",
+      ].join(",")
+    );
+
+    const marine = new URLSearchParams(common);
+    marine.set("forecast_days", "7");
+    marine.set("current", "sea_surface_temperature,wave_height,wave_direction,wave_period");
+    marine.set("hourly", "sea_surface_temperature,wave_height,wave_direction,wave_period");
+    marine.set("daily", "wave_height_max,wave_direction_dominant,wave_period_max");
+
+    return {
+      forecast: `https://api.open-meteo.com/v1/forecast?${forecast}`,
+      marine: `https://marine-api.open-meteo.com/v1/marine?${marine}`,
+    };
+  }
+
+  async function fetchDirectOpenMeteo() {
+    const urls = buildOpenMeteoUrls();
+    const forecastRes = await fetch(urls.forecast, { cache: "no-store" });
+    if (!forecastRes.ok) {
+      throw new Error(`Open-Meteo non raggiungibile (${forecastRes.status})`);
+    }
+    const forecast = await forecastRes.json();
+
+    let marine = null;
+    let marine_error = null;
+    try {
+      const marineRes = await fetch(urls.marine, { cache: "no-store" });
+      if (!marineRes.ok) throw new Error(`HTTP ${marineRes.status}`);
+      marine = await marineRes.json();
+    } catch (err) {
+      marine_error = err.message || String(err);
+    }
+
+    return {
+      location: LOCATION,
+      fetched_at: new Date().toISOString(),
+      forecast,
+      marine,
+      marine_error,
+      source: { name: "Open-Meteo", url: "https://open-meteo.com/", license: "CC BY 4.0" },
+      via: "browser",
+    };
+  }
 
   function weatherLabel(code) {
     return (WMO[code] && WMO[code].label) || `Codice meteo ${code}`;
@@ -288,19 +408,34 @@
     setStatus(true, "Aggiornamento…");
 
     try {
-      const res = await fetch(`/api/weather?t=${Date.now()}`, { cache: "no-store" });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `Errore ${res.status}`);
+      let data = null;
+      let lastError = null;
+
+      try {
+        const res = await fetch(`/api/weather?t=${Date.now()}`, { cache: "no-store" });
+        const payload = await res.json();
+        if (!res.ok) throw new Error(payload.error || `Errore server ${res.status}`);
+        data = payload;
+      } catch (err) {
+        lastError = err;
+        console.warn("API locale non disponibile, provo Open-Meteo diretto…", err);
+        data = await fetchDirectOpenMeteo();
+      }
 
       renderCurrent(data);
       renderHourly(data);
       renderDaily(data);
       renderMarine(data);
       setStatus(true, "Live");
+      if (data.via === "browser" && lastError) {
+        els.updatedAt.textContent = `${els.updatedAt.textContent} · fallback browser`;
+      }
     } catch (err) {
       console.error(err);
       setStatus(false, "Errore");
-      els.updatedAt.textContent = err.message || "Impossibile caricare i dati meteo.";
+      const msg = err && err.message ? err.message : "Impossibile caricare i dati meteo.";
+      els.updatedAt.textContent =
+        `${msg} — Controlla la connessione internet e riavvia con avvia_meteo.command (non aprire solo il file HTML).`;
     } finally {
       document.body.classList.remove("is-loading");
       els.refreshBtn.disabled = false;

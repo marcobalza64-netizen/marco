@@ -9,6 +9,8 @@ from __future__ import annotations
 import argparse
 import json
 import mimetypes
+import ssl
+import subprocess
 import sys
 import threading
 import urllib.error
@@ -43,9 +45,51 @@ USER_AGENT = "MeteoBordighera/1.0 (+https://github.com/marcobalza64-netizen/marc
 
 
 def _http_get_json(url: str, timeout: float = 20.0) -> dict:
-    req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
-    with urllib.request.urlopen(req, timeout=timeout) as resp:
-        return json.loads(resp.read().decode("utf-8"))
+    """Scarica JSON. Su Mac preferisce curl (certificati Apple), poi urllib."""
+    errors: list[str] = []
+    hdrs = {"User-Agent": USER_AGENT, "Accept": "application/json"}
+
+    try:
+        completed = subprocess.run(
+            [
+                "curl",
+                "-fsSL",
+                "--max-time",
+                str(int(timeout)),
+                "-A",
+                USER_AGENT,
+                "-H",
+                "Accept: application/json",
+                url,
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if completed.returncode == 0 and completed.stdout.strip():
+            return json.loads(completed.stdout)
+        err = (completed.stderr or completed.stdout or f"curl exit {completed.returncode}").strip()
+        errors.append(f"curl: {err}")
+    except FileNotFoundError:
+        errors.append("curl: non trovato")
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"curl: {exc}")
+
+    req = urllib.request.Request(url, headers=hdrs)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"urllib: {exc}")
+
+    try:
+        ctx = ssl._create_unverified_context()
+        with urllib.request.urlopen(req, timeout=timeout, context=ctx) as resp:
+            return json.loads(resp.read().decode("utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        errors.append(f"urllib-insecure: {exc}")
+
+    raise RuntimeError(" | ".join(errors))
 
 
 def fetch_weather() -> dict:

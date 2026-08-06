@@ -4,6 +4,9 @@ App web per vedere **tutti i dati meteo e le previsioni** di Bordighera (Liguria
 
 **Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac/PC.
 
+> Nel ZIP del repository c’è anche l’app NVIDIA (`avvia_web.command`).  
+> Per il **meteo** usa solo **`avvia_meteo.command`**.
+
 ## Cosa mostra
 - Temperatura, percepita, umidità, pressione, UV, visibilità
 - Vento, raffiche e direzione
@@ -18,10 +21,11 @@ App web per vedere **tutti i dati meteo e le previsioni** di Bordighera (Liguria
 
 ---
 
-## Avvio (consigliato)
+## Avvio (meteo)
 
-1. Vai su: https://github.com/marcobalza64-netizen/marco  
-2. **Code → Download ZIP** ed estrai  
+1. Scarica lo ZIP:  
+   https://codeload.github.com/marcobalza64-netizen/marco/zip/refs/heads/cursor/meteo-bordighera-0955  
+2. Estrai la cartella  
 3. **Doppio clic** su `avvia_meteo.command`  
    (se il Mac blocca: tasto destro → **Apri** → **Apri**)
 
@@ -31,28 +35,14 @@ Per uscire: nel Terminale premi `Ctrl + C`.
 Oppure da Terminale:
 
 ```bash
-cd ~/Downloads/marco-main
+cd ~/Downloads/marco-cursor-meteo-bordighera-0955
 python3 meteo_app.py
 ```
 
-Opzioni:
-
-```bash
-python3 meteo_app.py --port 8787
-python3 meteo_app.py --no-browser
-```
-
----
-
-## API locale
-
-- `GET /api/health` — stato del server
-- `GET /api/weather` — JSON completo (attuale, oraria, giornaliera, mare)
-
-## Se manca Python
-
-Scarica Python da https://www.python.org/downloads/  
-Installa, poi ripeti il doppio clic su `avvia_meteo.command`.
+### Se vedi la pagina ma senza dati
+- Serve internet (i dati arrivano da Open-Meteo)
+- Non aprire solo `meteo/index.html`: va avviato il server con `avvia_meteo.command`
+- Premi **Aggiorna** nella pagina
 
 ## Nota
 
