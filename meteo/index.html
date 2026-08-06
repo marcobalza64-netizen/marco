@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Meteo Bordighera</title>
+  <meta name="description" content="Meteo e previsioni in tempo reale per Bordighera: temperatura, vento, mare, UV e 14 giorni." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="sky-glow"></div>
+    <div class="sky-haze"></div>
+    <div class="sea-band"></div>
+  </div>
+
+  <header class="topbar">
+    <p class="status" id="status">
+      <span class="pulse" aria-hidden="true"></span>
+      <span id="statusText">Caricamento…</span>
+    </p>
+    <button type="button" class="refresh" id="refreshBtn" aria-label="Aggiorna dati">Aggiorna</button>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="brand">
+      <p class="place-line" id="placeLine">Liguria · Riviera dei Fiori</p>
+      <h1 class="brand" id="brand">Bordighera</h1>
+      <p class="headline" id="headline">Meteo e previsioni sulla costa</p>
+      <div class="hero-now" aria-live="polite">
+        <p class="temp" id="temp">—°</p>
+        <p class="condition" id="condition">—</p>
+        <p class="feels" id="feels">—</p>
+      </div>
+      <p class="cta-hint" id="updatedAt">Attendere i dati da Open-Meteo…</p>
+    </section>
+
+    <section class="section" aria-labelledby="now-title">
+      <div class="section-head">
+        <h2 id="now-title">Ora a Bordighera</h2>
+        <p>Temperatura, vento, umidità, pressione e UV in questo momento.</p>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </section>
+
+    <section class="section" aria-labelledby="hourly-title">
+      <div class="section-head">
+        <h2 id="hourly-title">Prossime ore</h2>
+        <p>Andamento temperatura, probabilità di pioggia e vento.</p>
+      </div>
+      <div class="hourly-scroll" id="hourly" tabindex="0" aria-label="Previsione oraria"></div>
+    </section>
+
+    <section class="section" aria-labelledby="daily-title">
+      <div class="section-head">
+        <h2 id="daily-title">Prossimi 14 giorni</h2>
+        <p>Massime, minime, precipitazioni e vento dominante.</p>
+      </div>
+      <div class="daily-list" id="daily"></div>
+    </section>
+
+    <section class="section" aria-labelledby="marine-title">
+      <div class="section-head">
+        <h2 id="marine-title">Mare</h2>
+        <p>Temperatura dell’acqua e stato del mare davanti a Bordighera.</p>
+      </div>
+      <div class="marine" id="marine"></div>
+    </section>
+
+    <section class="section sun-section" aria-labelledby="sun-title">
+      <div class="section-head">
+        <h2 id="sun-title">Sole e giornata</h2>
+        <p>Alba, tramonto e indici utili per uscire.</p>
+      </div>
+      <div class="sun-grid" id="sun"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Dati da <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a> · licenza CC BY 4.0</p>
+    <p class="coords" id="coords">43.78°N · 7.66°E · Europe/Rome</p>
+  </footer>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

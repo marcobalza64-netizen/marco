@@ -1,62 +1,59 @@
-# Monitor NVIDIA (Europa) — tempo reale
+# Meteo Bordighera
 
-App per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
+App web per vedere **tutti i dati meteo e le previsioni** di Bordighera (Liguria): condizioni attuali, prossime ore, 14 giorni e stato del mare.
 
-**Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac.
+**Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac/PC.
+
+## Cosa mostra
+- Temperatura, percepita, umidità, pressione, UV, visibilità
+- Vento, raffiche e direzione
+- Previsione oraria (24 ore)
+- Previsione giornaliera (14 giorni)
+- Mare: temperatura acqua, altezza e periodo onde
+- Alba e tramonto
 
 ## Fonti dati
-- **Xetra / Francoforte**: Börse Frankfurt → **tempo reale**
-- **Tradegate**: mercato Europa retail → **tempo reale**
-- **NASDAQ**: Yahoo Finance → near real-time
+- [Open-Meteo](https://open-meteo.com/) (licenza CC BY 4.0)
+- Coordinate: Bordighera · 43.78°N, 7.66°E · fuso `Europe/Rome`
 
 ---
 
-## Versione WEB (consigliata)
-
-Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.
+## Avvio (consigliato)
 
 1. Vai su: https://github.com/marcobalza64-netizen/marco  
 2. **Code → Download ZIP** ed estrai  
-3. **Doppio clic** su `avvia_web.command`  
+3. **Doppio clic** su `avvia_meteo.command`  
    (se il Mac blocca: tasto destro → **Apri** → **Apri**)
 
-Si apre la pagina `http://127.0.0.1:8765` con il prezzo live.  
+Si apre la pagina `http://127.0.0.1:8787`.  
 Per uscire: nel Terminale premi `Ctrl + C`.
 
 Oppure da Terminale:
 
 ```bash
 cd ~/Downloads/marco-main
-python3 web_app.py
+python3 meteo_app.py
+```
+
+Opzioni:
+
+```bash
+python3 meteo_app.py --port 8787
+python3 meteo_app.py --no-browser
 ```
 
 ---
 
-## Versione Terminale
+## API locale
 
-- **Doppio clic** su `avvia.command`  
-  oppure:
-
-```bash
-cd ~/Downloads/marco-main
-python3 nvidia_monitor.py
-```
-
-### Opzioni terminale
-
-```bash
-python3 nvidia_monitor.py              # Xetra Europa tempo reale (euro)
-python3 nvidia_monitor.py -m frankfurt # Francoforte tempo reale
-python3 nvidia_monitor.py -m tradegate # Tradegate tempo reale
-python3 nvidia_monitor.py -m nasdaq    # USA (dollari)
-python3 nvidia_monitor.py -i 1         # aggiorna ogni 1 secondo
-```
+- `GET /api/health` — stato del server
+- `GET /api/weather` — JSON completo (attuale, oraria, giornaliera, mare)
 
 ## Se manca Python
 
 Scarica Python da https://www.python.org/downloads/  
-Installa, poi ripeti il doppio clic su `avvia_web.command`.
+Installa, poi ripeti il doppio clic su `avvia_meteo.command`.
 
 ## Nota
 
-Solo a scopo informativo, non è un consiglio finanziario.
+Solo a scopo informativo. I dati meteo possono variare rispetto ad altre fonti.
