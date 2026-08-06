@@ -1,6 +1,6 @@
 # Monitor NVIDIA (Europa) — tempo reale
 
-App semplice per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
+App per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
 
 **Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac.
 
@@ -9,31 +9,40 @@ App semplice per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
 - **Tradegate**: mercato Europa retail → **tempo reale**
 - **NASDAQ**: Yahoo Finance → near real-time
 
-## Sul Mac — 2 passi
+---
 
-### 1) Scarica
+## Versione WEB (consigliata)
+
+Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.
+
 1. Vai su: https://github.com/marcobalza64-netizen/marco  
-2. Clicca **Code** → **Download ZIP**  
-3. Doppio clic sullo ZIP per estrarlo  
-4. Apri la cartella `marco-main`
+2. **Code → Download ZIP** ed estrai  
+3. **Doppio clic** su `avvia_web.command`  
+   (se il Mac blocca: tasto destro → **Apri** → **Apri**)
 
-### 2) Avvia
-- **Doppio clic** sul file `avvia.command`  
-- Se il Mac dice che non si può aprire: **tasto destro** → **Apri** → **Apri**
+Si apre la pagina `http://127.0.0.1:8765` con il prezzo live.  
+Per uscire: nel Terminale premi `Ctrl + C`.
 
-Vedrai il prezzo NVIDIA aggiornarsi ogni 2 secondi, con ora dell’ultimo trade.  
-Per uscire: `Ctrl + C`, poi Invio.
+Oppure da Terminale:
+
+```bash
+cd ~/Downloads/marco-main
+python3 web_app.py
+```
 
 ---
 
-### In alternativa (Terminale)
+## Versione Terminale
+
+- **Doppio clic** su `avvia.command`  
+  oppure:
 
 ```bash
 cd ~/Downloads/marco-main
 python3 nvidia_monitor.py
 ```
 
-## Opzioni
+### Opzioni terminale
 
 ```bash
 python3 nvidia_monitor.py              # Xetra Europa tempo reale (euro)
@@ -46,7 +55,7 @@ python3 nvidia_monitor.py -i 1         # aggiorna ogni 1 secondo
 ## Se manca Python
 
 Scarica Python da https://www.python.org/downloads/  
-Installa, poi ripeti il doppio clic su `avvia.command`.
+Installa, poi ripeti il doppio clic su `avvia_web.command`.
 
 ## Nota
 
