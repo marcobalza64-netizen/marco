@@ -1,107 +1,47 @@
-# Monitor NVIDIA — mercati europei
+# Monitor NVIDIA (Europa)
 
-App Python in tempo reale per seguire il valore delle azioni **NVIDIA** sui mercati europei (Xetra / Francoforte).
+App semplice per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
+**Non serve installare nulla** (niente pip, niente yfinance): usa solo Python già presente sul Mac.
 
-## Cosa fa
+## Sul Mac — 2 passi
 
-- Mostra prezzo, variazione, apertura, max/min, volume
-- Aggiornamento automatico ogni pochi secondi
-- Mercati: **Xetra** (default, EUR), Francoforte, oppure NASDAQ
-- Interfaccia a terminale chiara (verde = rialzo, rosso = ribasso)
+### 1) Scarica
+1. Vai su: https://github.com/marcobalza64-netizen/marco  
+2. Clicca **Code** → **Download ZIP**  
+3. Doppio clic sullo ZIP per estrarlo  
+4. Apri la cartella `marco-main`
 
-> I dati arrivano da Yahoo Finance (near real-time). Non sono un feed professionale di borsa.
+### 2) Avvia
+- **Doppio clic** sul file `avvia.command`  
+- Se il Mac dice che non si può aprire: **tasto destro** → **Apri** → **Apri**
 
-## Come scaricarla da GitHub (Mac)
+Vedrai il prezzo NVIDIA aggiornarsi da solo.  
+Per uscire: `Ctrl + C`, poi Invio.
 
-Apri **Terminale** sul Mac (`Applicazioni → Utility → Terminale`) e copia/incolla:
+---
 
-```bash
-# 1) Scarica il progetto
-git clone https://github.com/marcobalza64-netizen/marco.git
-cd marco
-
-# 2) (Consigliato) Crea un ambiente virtuale
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 3) Installa le dipendenze
-pip install -r requirements.txt
-
-# 4) Avvia il monitor (Xetra / Europa, in euro)
-python nvidia_monitor.py
-```
-
-Per uscire: premi `Ctrl + C`.
-
-### Se non hai Python sul Mac
+### In alternativa (Terminale)
 
 ```bash
-# Installa Homebrew (se non ce l'hai)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# Installa Python
-brew install python
-```
-
-Poi ripeti i passi 2–4 sopra.
-
-### Se non hai git
-
-Scarica lo ZIP da GitHub:
-
-1. Vai su https://github.com/marcobalza64-netizen/marco
-2. Clicca **Code → Download ZIP**
-3. Estrai lo ZIP
-4. Nel Terminale:
-
-```bash
-cd ~/Downloads/marco-main   # adatta il percorso se diverso
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python nvidia_monitor.py
+cd ~/Downloads/marco-main
+python3 nvidia_monitor.py
 ```
 
 ## Opzioni
 
 ```bash
-# Mercato Xetra (default, EUR)
-python nvidia_monitor.py
-
-# Francoforte
-python nvidia_monitor.py -m frankfurt
-
-# NASDAQ USA (USD)
-python nvidia_monitor.py -m nasdaq
-
-# Aggiorna ogni 10 secondi
-python nvidia_monitor.py -i 10
-
-# Una sola quotazione (senza loop)
-python nvidia_monitor.py --once
+python3 nvidia_monitor.py              # Xetra Europa (euro)
+python3 nvidia_monitor.py -m frankfurt # Francoforte
+python3 nvidia_monitor.py -m nasdaq    # USA (dollari)
+python3 nvidia_monitor.py -i 10        # aggiorna ogni 10 secondi
 ```
 
-| Opzione | Descrizione |
-|--------|-------------|
-| `-m xetra` | Xetra `NVD.DE` (EUR) — default |
-| `-m frankfurt` | Francoforte `NVD.F` (EUR) |
-| `-m nasdaq` | NASDAQ USA `NVDA` (USD) |
-| `-i 5` | Intervallo refresh in secondi |
-| `--once` | Stampa una volta e termina |
+## Se manca Python
 
-## Orari di mercato (Europa)
+Scarica Python da https://www.python.org/downloads/  
+Installa, poi ripeti il doppio clic su `avvia.command`.
 
-- **Xetra / Francoforte**: circa 09:00 – 17:30 (ora di Berlino), lun–ven
-- Fuori orario lo stato risulta “Chiuso”; il prezzo mostrato è l’ultimo disponibile
+## Nota
 
-## Requisiti
-
-- macOS
-- Python 3.10 o superiore
-- Connessione internet
-
-## Disclaimer
-
-Questa app è solo a scopo informativo/didattico. Non costituisce consiglio finanziario.
+Dati da Yahoo Finance (near real-time). Solo a scopo informativo, non è un consiglio finanziario.

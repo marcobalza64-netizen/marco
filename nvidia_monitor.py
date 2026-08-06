@@ -1,37 +1,26 @@
 #!/usr/bin/env python3
 """
-Monitor in tempo reale delle azioni NVIDIA sui mercati europei.
-Simboli: Xetra (NVD.DE), Francoforte (NVD.F), NASDAQ (NVDA).
+Monitor NVIDIA — mercati europei
+Nessuna libreria da installare: usa solo Python standard.
 """
 
 from __future__ import annotations
 
 import argparse
-import logging
+import json
 import sys
 import time
-import warnings
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-import yfinance as yf
-from rich.console import Console, Group
-from rich.live import Live
-from rich.panel import Panel
-from rich.table import Table
-from rich.text import Text
-
-# Riduce rumore di yfinance in console
-logging.getLogger("yfinance").setLevel(logging.CRITICAL)
-warnings.filterwarnings("ignore", category=FutureWarning)
-
-# Mercati europei disponibili (Yahoo Finance)
 MARKETS = {
     "xetra": {
         "symbol": "NVD.DE",
-        "name": "Xetra (Francoforte)",
+        "name": "Xetra (Europa)",
         "currency": "EUR",
         "tz": "Europe/Berlin",
     },
@@ -49,8 +38,7 @@ MARKETS = {
     },
 }
 
-DEFAULT_MARKET = "xetra"
-DEFAULT_INTERVAL_SEC = 5
+UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36"
 
 
 @dataclass
@@ -65,92 +53,79 @@ class Quote:
     low: Optional[float]
     previous_close: Optional[float]
     volume: Optional[int]
-    market_state: str
+    market_open: bool
     fetched_at: datetime
 
 
-def _safe_float(value: object) -> Optional[float]:
-    if value is None:
-        return None
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
+def clear() -> None:
+    # Pulisce il terminale (Mac / Linux / Windows)
+    sys.stdout.write("\033[2J\033[H")
+    sys.stdout.flush()
 
 
-def _safe_int(value: object) -> Optional[int]:
-    if value is None:
-        return None
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
-
-
-def infer_market_state(market_key: str, reported: Optional[str]) -> str:
-    """Usa lo stato Yahoo se disponibile, altrimenti stima dagli orari locali."""
-    if reported and reported.upper() not in {"UNKNOWN", "NONE", ""}:
-        return reported.upper()
-
+def fetch_quote(market_key: str) -> Quote:
     market = MARKETS[market_key]
-    now = datetime.now(ZoneInfo(market["tz"]))
-    # Sabato/Domenica chiuso
-    if now.weekday() >= 5:
-        return "CLOSED"
-
-    minutes = now.hour * 60 + now.minute
-    if market_key in {"xetra", "frankfurt"}:
-        # Xetra: ~09:00–17:30 ora di Berlino
-        if 9 * 60 <= minutes < 17 * 60 + 30:
-            return "REGULAR"
-        return "CLOSED"
-
-    # NASDAQ: 09:30–16:00 ET
-    if 9 * 60 + 30 <= minutes < 16 * 60:
-        return "REGULAR"
-    if 4 * 60 <= minutes < 9 * 60 + 30:
-        return "PRE"
-    if 16 * 60 <= minutes < 20 * 60:
-        return "POST"
-    return "CLOSED"
-
-
-def fetch_quote(symbol: str, currency_hint: str, market_key: str) -> Quote:
-    ticker = yf.Ticker(symbol)
-    info = ticker.fast_info
-
-    price = _safe_float(getattr(info, "last_price", None))
-    previous_close = _safe_float(getattr(info, "previous_close", None))
-    open_price = _safe_float(getattr(info, "open", None))
-    high = _safe_float(getattr(info, "day_high", None))
-    low = _safe_float(getattr(info, "day_low", None))
-    volume = _safe_int(getattr(info, "last_volume", None))
-    currency = getattr(info, "currency", None) or currency_hint
-    reported_state = getattr(info, "market_state", None)
-    market_state = infer_market_state(
-        market_key, str(reported_state) if reported_state is not None else None
+    symbol = market["symbol"]
+    url = (
+        "https://query1.finance.yahoo.com/v8/finance/chart/"
+        f"{symbol}?interval=1d&range=5d"
     )
+    req = urllib.request.Request(url, headers={"User-Agent": UA})
+    with urllib.request.urlopen(req, timeout=15) as resp:
+        data = json.loads(resp.read().decode("utf-8"))
 
-    # Fallback su history recente se mancano dati OHLC
-    if price is None or open_price is None or high is None or low is None:
-        hist = ticker.history(period="5d", interval="1d")
-        if not hist.empty:
-            last = hist.iloc[-1]
-            if price is None:
-                price = _safe_float(last.get("Close"))
-            if open_price is None:
-                open_price = _safe_float(last.get("Open"))
-            if high is None:
-                high = _safe_float(last.get("High"))
-            if low is None:
-                low = _safe_float(last.get("Low"))
-            if volume is None:
-                volume = _safe_int(last.get("Volume"))
-            if previous_close is None and len(hist) >= 2:
-                previous_close = _safe_float(hist.iloc[-2].get("Close"))
+    result = data["chart"]["result"][0]
+    meta = result["meta"]
+    indicators = result["indicators"]["quote"][0]
 
-    if price is None:
-        raise RuntimeError(f"Nessun prezzo disponibile per {symbol}")
+    price = float(meta.get("regularMarketPrice") or meta.get("previousClose") or 0)
+    currency = meta.get("currency") or market["currency"]
+
+    # Ultimo giorno con dati validi
+    opens = indicators.get("open") or []
+    highs = indicators.get("high") or []
+    lows = indicators.get("low") or []
+    closes = indicators.get("close") or []
+    volumes = indicators.get("volume") or []
+
+    def last_valid(values):
+        for value in reversed(values):
+            if value is not None:
+                return value
+        return None
+
+    def previous_valid(values):
+        found_last = False
+        for value in reversed(values):
+            if value is None:
+                continue
+            if not found_last:
+                found_last = True
+                continue
+            return value
+        return None
+
+    open_price = last_valid(opens)
+    high = meta.get("regularMarketDayHigh")
+    if high is None:
+        high = last_valid(highs)
+    low = meta.get("regularMarketDayLow")
+    if low is None:
+        low = last_valid(lows)
+    volume = meta.get("regularMarketVolume")
+    if volume is None:
+        volume = last_valid(volumes)
+
+    # Chiusura precedente = penultima chiusura giornaliera
+    previous_close = previous_valid(closes)
+    if previous_close is None:
+        previous_close = meta.get("previousClose") or meta.get("chartPreviousClose")
+
+    open_price = float(open_price) if open_price is not None else None
+    high = float(high) if high is not None else None
+    low = float(low) if low is not None else None
+    volume = int(volume) if volume is not None else None
+    previous_close = float(previous_close) if previous_close is not None else None
 
     if previous_close and previous_close != 0:
         change = price - previous_close
@@ -159,10 +134,13 @@ def fetch_quote(symbol: str, currency_hint: str, market_key: str) -> Quote:
         change = 0.0
         change_pct = 0.0
 
+    now = datetime.now(ZoneInfo(market["tz"]))
+    market_open = is_market_open(market_key, now)
+
     return Quote(
         symbol=symbol,
         price=price,
-        currency=str(currency),
+        currency=currency,
         change=change,
         change_pct=change_pct,
         open_price=open_price,
@@ -170,18 +148,27 @@ def fetch_quote(symbol: str, currency_hint: str, market_key: str) -> Quote:
         low=low,
         previous_close=previous_close,
         volume=volume,
-        market_state=market_state,
-        fetched_at=datetime.now(timezone.utc),
+        market_open=market_open,
+        fetched_at=now,
     )
 
 
-def format_money(value: Optional[float], currency: str) -> str:
+def is_market_open(market_key: str, now: datetime) -> bool:
+    if now.weekday() >= 5:
+        return False
+    minutes = now.hour * 60 + now.minute
+    if market_key in {"xetra", "frankfurt"}:
+        return 9 * 60 <= minutes < 17 * 60 + 30
+    return 9 * 60 + 30 <= minutes < 16 * 60
+
+
+def money(value: Optional[float], currency: str) -> str:
     if value is None:
         return "—"
     return f"{value:,.2f} {currency}"
 
 
-def format_volume(value: Optional[int]) -> str:
+def volume_txt(value: Optional[int]) -> str:
     if value is None:
         return "—"
     if value >= 1_000_000:
@@ -191,167 +178,96 @@ def format_volume(value: Optional[int]) -> str:
     return str(value)
 
 
-def market_state_label(state: str) -> str:
-    mapping = {
-        "REGULAR": "Aperto",
-        "PRE": "Pre-mercato",
-        "PREPRE": "Pre-pre mercato",
-        "POST": "After hours",
-        "POSTPOST": "Post mercato",
-        "CLOSED": "Chiuso",
-        "UNKNOWN": "N/D",
-    }
-    return mapping.get(state.upper(), state)
-
-
-def build_display(
-    quote: Quote,
-    market_key: str,
-    interval: int,
-    error: Optional[str] = None,
-) -> Panel:
+def render(quote: Quote, market_key: str, interval: int, error: Optional[str]) -> str:
     market = MARKETS[market_key]
-    local_tz = ZoneInfo(market["tz"])
-    local_now = datetime.now(local_tz)
+    up = quote.change >= 0
+    color = "\033[92m" if up else "\033[91m"
+    reset = "\033[0m"
+    bold = "\033[1m"
+    dim = "\033[2m"
+    arrow = "▲" if up else "▼"
+    sign = "+" if up else ""
 
-    title = Text()
-    title.append("NVIDIA  ", style="bold green")
-    title.append(market["name"], style="bold white")
-    title.append(f"  ·  {quote.symbol}", style="dim")
-
-    price_color = "green" if quote.change >= 0 else "red"
-    arrow = "▲" if quote.change >= 0 else "▼"
-    sign = "+" if quote.change >= 0 else ""
-
-    price_line = Text()
-    price_line.append(f"{quote.price:,.2f}", style=f"bold {price_color}")
-    price_line.append(f" {quote.currency}  ", style="bold white")
-    price_line.append(
-        f"{arrow} {sign}{quote.change:,.2f} ({sign}{quote.change_pct:.2f}%)",
-        style=price_color,
-    )
-
-    table = Table(show_header=False, box=None, padding=(0, 2))
-    table.add_column(style="dim")
-    table.add_column(style="white")
-    table.add_row("Apertura", format_money(quote.open_price, quote.currency))
-    table.add_row("Massimo", format_money(quote.high, quote.currency))
-    table.add_row("Minimo", format_money(quote.low, quote.currency))
-    table.add_row("Chiusura prec.", format_money(quote.previous_close, quote.currency))
-    table.add_row("Volume", format_volume(quote.volume))
-    table.add_row("Stato mercato", market_state_label(quote.market_state))
-    table.add_row(
-        "Ora locale mercato",
-        local_now.strftime("%d/%m/%Y %H:%M:%S %Z"),
-    )
-    table.add_row(
-        "Ultimo aggiornamento",
-        quote.fetched_at.astimezone(local_tz).strftime("%H:%M:%S"),
-    )
-    table.add_row("Intervallo refresh", f"{interval}s")
-
-    body_parts = [price_line, Text(""), table]
-
+    lines = [
+        f"{bold}NVIDIA — {market['name']}{reset}  {dim}({quote.symbol}){reset}",
+        "",
+        f"{color}{bold}{quote.price:,.2f} {quote.currency}{reset}  "
+        f"{color}{arrow} {sign}{quote.change:,.2f} ({sign}{quote.change_pct:.2f}%){reset}",
+        "",
+        f"  Apertura         {money(quote.open_price, quote.currency)}",
+        f"  Massimo          {money(quote.high, quote.currency)}",
+        f"  Minimo           {money(quote.low, quote.currency)}",
+        f"  Chiusura prec.   {money(quote.previous_close, quote.currency)}",
+        f"  Volume           {volume_txt(quote.volume)}",
+        f"  Stato mercato    {'Aperto' if quote.market_open else 'Chiuso'}",
+        f"  Ora locale       {quote.fetched_at.strftime('%d/%m/%Y %H:%M:%S %Z')}",
+        f"  Aggiornamento    ogni {interval}s",
+        "",
+    ]
     if error:
-        body_parts.append(Text(""))
-        body_parts.append(Text(f"Avviso: {error}", style="yellow"))
-
-    body_parts.append(Text(""))
-    body_parts.append(
-        Text(
-            "Ctrl+C per uscire  ·  Dati Yahoo Finance (near real-time)",
-            style="dim",
-        )
-    )
-
-    return Panel(
-        Group(*body_parts),
-        title=title,
-        border_style="green" if quote.change >= 0 else "red",
-        padding=(1, 2),
-    )
+        lines.append(f"\033[93mAvviso: {error}{reset}")
+        lines.append("")
+    lines.append(f"{dim}Ctrl+C per uscire{reset}")
+    return "\n".join(lines)
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Monitor in tempo reale azioni NVIDIA (mercati europei)"
-    )
+    parser = argparse.ArgumentParser(description="Monitor NVIDIA (Europa) — senza installazioni")
     parser.add_argument(
         "-m",
         "--market",
         choices=sorted(MARKETS.keys()),
-        default=DEFAULT_MARKET,
-        help="Mercato da monitorare (default: xetra)",
+        default="xetra",
+        help="Mercato (default: xetra)",
     )
     parser.add_argument(
         "-i",
         "--interval",
         type=int,
-        default=DEFAULT_INTERVAL_SEC,
-        help="Secondi tra un aggiornamento e l'altro (default: 5)",
+        default=5,
+        help="Secondi tra aggiornamenti (default: 5)",
     )
-    parser.add_argument(
-        "--once",
-        action="store_true",
-        help="Mostra una sola quotazione e termina",
-    )
+    parser.add_argument("--once", action="store_true", help="Una sola quotazione")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
-    market = MARKETS[args.market]
-    console = Console()
-
     if args.interval < 2:
-        console.print("[red]Intervallo minimo: 2 secondi[/red]")
+        print("Intervallo minimo: 2 secondi")
         return 1
-
-    console.print(
-        f"[bold]Avvio monitor NVIDIA[/bold] su [cyan]{market['name']}[/cyan] "
-        f"([white]{market['symbol']}[/white])…"
-    )
 
     last_quote: Optional[Quote] = None
     last_error: Optional[str] = None
 
-    def refresh() -> Panel:
+    def refresh() -> None:
         nonlocal last_quote, last_error
         try:
-            last_quote = fetch_quote(
-                market["symbol"], market["currency"], args.market
-            )
+            last_quote = fetch_quote(args.market)
             last_error = None
-        except Exception as exc:  # noqa: BLE001
+        except (urllib.error.URLError, urllib.error.HTTPError, KeyError, IndexError, ValueError) as exc:
             last_error = str(exc)
-            if last_quote is None:
-                last_quote = Quote(
-                    symbol=market["symbol"],
-                    price=0.0,
-                    currency=market["currency"],
-                    change=0.0,
-                    change_pct=0.0,
-                    open_price=None,
-                    high=None,
-                    low=None,
-                    previous_close=None,
-                    volume=None,
-                    market_state=infer_market_state(args.market, None),
-                    fetched_at=datetime.now(timezone.utc),
-                )
-        return build_display(last_quote, args.market, args.interval, last_error)
+
+        if last_quote is None:
+            print("Caricamento…")
+            if last_error:
+                print(f"Errore: {last_error}")
+            return
+
+        clear()
+        print(render(last_quote, args.market, args.interval, last_error))
 
     if args.once:
-        console.print(refresh())
-        return 0 if last_error is None else 1
+        refresh()
+        return 0 if last_error is None and last_quote is not None else 1
 
+    print("Avvio monitor NVIDIA…")
     try:
-        with Live(refresh(), console=console, refresh_per_second=4) as live:
-            while True:
-                time.sleep(args.interval)
-                live.update(refresh())
+        while True:
+            refresh()
+            time.sleep(args.interval)
     except KeyboardInterrupt:
-        console.print("\n[dim]Monitor interrotto.[/dim]")
+        print("\nMonitor interrotto.")
         return 0
 
 
