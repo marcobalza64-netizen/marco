@@ -150,6 +150,31 @@ a {
   cursor: wait;
 }
 
+.safari-banner {
+  max-width: 1100px;
+  margin: 0 auto 0.5rem;
+  padding: 0.9rem 1.25rem;
+  color: var(--sea-deep);
+  background: rgba(232, 177, 90, 0.28);
+  border-top: 1px solid rgba(11, 58, 74, 0.12);
+  border-bottom: 1px solid rgba(11, 58, 74, 0.12);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.safari-banner[hidden] {
+  display: none !important;
+}
+
+.safari-banner p {
+  margin: 0;
+}
+
+.safari-banner a {
+  font-weight: 700;
+  word-break: break-word;
+}
+
 main {
   max-width: 1100px;
   margin: 0 auto;

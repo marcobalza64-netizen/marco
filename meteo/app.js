@@ -58,7 +58,45 @@
     longitude: 7.6632,
     timezone: "Europe/Rome",
   };
+  const ONLINE_URL =
+    "https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html";
   let timer = null;
+
+  function isAppleTouchDevice() {
+    const ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/i.test(ua)) return true;
+    // iPadOS desktop UA
+    return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  }
+
+  function isLocalFile() {
+    return window.location.protocol === "file:";
+  }
+
+  function showSafariBanner(force) {
+    const banner = document.getElementById("safariBanner");
+    const link = document.getElementById("onlineLink");
+    if (!banner) return;
+    if (link) link.href = ONLINE_URL;
+    if (force || (isLocalFile() && isAppleTouchDevice())) {
+      banner.hidden = false;
+    }
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    }).then(function (res) {
+      if (!res.ok) {
+        throw new Error("Open-Meteo HTTP " + res.status);
+      }
+      return res.json();
+    });
+  }
 
   function buildOpenMeteoUrls() {
     const common = new URLSearchParams({
@@ -139,35 +177,37 @@
     marine.set("daily", "wave_height_max,wave_direction_dominant,wave_period_max");
 
     return {
-      forecast: `https://api.open-meteo.com/v1/forecast?${forecast}`,
-      marine: `https://marine-api.open-meteo.com/v1/marine?${marine}`,
+      forecast: "https://api.open-meteo.com/v1/forecast?" + forecast.toString(),
+      marine: "https://marine-api.open-meteo.com/v1/marine?" + marine.toString(),
     };
   }
 
   async function fetchDirectOpenMeteo() {
-    const urls = buildOpenMeteoUrls();
-    const forecastRes = await fetch(urls.forecast, { cache: "no-store" });
-    if (!forecastRes.ok) {
-      throw new Error(`Open-Meteo non raggiungibile (${forecastRes.status})`);
+    // iOS Safari blocks network requests from file:// pages
+    if (isLocalFile() && isAppleTouchDevice()) {
+      showSafariBanner(true);
+      throw new Error(
+        "Safari su iPad/iPhone non consente dati da un file salvato. Usa il link online."
+      );
     }
-    const forecast = await forecastRes.json();
+
+    const urls = buildOpenMeteoUrls();
+    const forecast = await fetchJson(urls.forecast);
 
     let marine = null;
     let marine_error = null;
     try {
-      const marineRes = await fetch(urls.marine, { cache: "no-store" });
-      if (!marineRes.ok) throw new Error(`HTTP ${marineRes.status}`);
-      marine = await marineRes.json();
+      marine = await fetchJson(urls.marine);
     } catch (err) {
-      marine_error = err.message || String(err);
+      marine_error = (err && err.message) || String(err);
     }
 
     return {
       location: LOCATION,
       fetched_at: new Date().toISOString(),
-      forecast,
-      marine,
-      marine_error,
+      forecast: forecast,
+      marine: marine,
+      marine_error: marine_error,
       source: { name: "Open-Meteo", url: "https://open-meteo.com/", license: "CC BY 4.0" },
       via: "browser",
     };
@@ -245,9 +285,14 @@
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit",
-      hourCycle: "h23",
+      hour12: false,
     }).formatToParts(date);
-    const get = (type) => parts.find((p) => p.type === type)?.value;
+    const get = function (type) {
+      for (let i = 0; i < parts.length; i += 1) {
+        if (parts[i].type === type) return parts[i].value;
+      }
+      return "0";
+    };
     return {
       year: Number(get("year")),
       month: Number(get("month")),
@@ -412,22 +457,26 @@
     document.body.classList.add("is-loading");
     els.refreshBtn.disabled = true;
     setStatus(true, "Aggiornamento…");
+    showSafariBanner(false);
 
     try {
       let data = null;
 
       if (hasLocalApi()) {
         try {
-          const res = await fetch(`/api/weather?t=${Date.now()}`, { cache: "no-store" });
+          const res = await fetch("/api/weather?t=" + Date.now(), {
+            cache: "no-store",
+            mode: "cors",
+            credentials: "omit",
+          });
           const payload = await res.json();
-          if (!res.ok) throw new Error(payload.error || `Errore server ${res.status}`);
+          if (!res.ok) throw new Error(payload.error || "Errore server " + res.status);
           data = payload;
         } catch (err) {
           console.warn("API locale non disponibile, uso Open-Meteo diretto…", err);
           data = await fetchDirectOpenMeteo();
         }
       } else {
-        // GitHub Pages, file aperti, o link condiviso: dati diretti dal browser
         data = await fetchDirectOpenMeteo();
       }
 
@@ -440,8 +489,17 @@
       console.error(err);
       setStatus(false, "Errore");
       const msg = err && err.message ? err.message : "Impossibile caricare i dati meteo.";
-      els.updatedAt.textContent =
-        `${msg} — Serve una connessione internet. Apri di nuovo il file oppure premi Aggiorna.`;
+      if (isLocalFile() && isAppleTouchDevice()) {
+        showSafariBanner(true);
+        els.updatedAt.innerHTML =
+          msg +
+          ' <a href="' +
+          ONLINE_URL +
+          '">Apri la versione online per Safari / iPad</a>';
+      } else {
+        els.updatedAt.textContent =
+          msg + " — Serve internet. Su iPad/Safari usa il link online (non il file salvato).";
+      }
     } finally {
       document.body.classList.remove("is-loading");
       els.refreshBtn.disabled = false;
@@ -453,11 +511,12 @@
     timer = setInterval(loadWeather, REFRESH_MS);
   }
 
-  els.refreshBtn.addEventListener("click", () => {
+  els.refreshBtn.addEventListener("click", function () {
     loadWeather();
     schedule();
   });
 
+  showSafariBanner(false);
   loadWeather();
   schedule();
 })();

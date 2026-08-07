@@ -1,43 +1,38 @@
 # Meteo Bordighera
 
-App meteo e previsioni per **Bordighera** (Liguria).
+App meteo e previsioni per **Bordighera** (Liguria). Funziona su **Safari**, Chrome ed Edge.
 
 ---
 
-## Modo più semplice: un solo file HTML
+## iPad / iPhone (Safari) — importante
 
-Per mandarlo a qualcuno (anche su **Windows**):
+Safari **non permette** a un file HTML salvato sul dispositivo di scaricare i dati meteo.
 
-1. Scarica / invia solo questo file: **`Meteo-Bordighera.html`**
-2. La persona fa **doppio clic** sul file
-3. Si apre nel browser (Chrome / Edge) con i dati meteo
+Usa questo **link online** (copialo e aprilo in Safari):
 
-Serve **internet**. Non serve Python, non serve installare nulla.
+**https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html**
 
-Download ZIP (contiene anche il file HTML):  
-https://codeload.github.com/marcobalza64-netizen/marco/zip/refs/heads/cursor/meteo-bordighera-0955  
+Puoi anche aggiungerlo a Home (Condividi → Aggiungi a Home).
 
-Oppure file diretto:  
+---
+
+## Windows / Mac (Chrome o Edge)
+
+1. Scarica `Meteo-Bordighera.html`
+2. Doppio clic → si apre nel browser
+
+File diretto:  
 https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html  
-(tasto destro → “Salva con nome…”, poi doppio clic)
+(tasto destro → Salva con nome)
 
----
-
-## Altre modalità (opzionali)
-
-| Sistema | File |
-|--------|------|
-| Windows (con Python) | `avvia_meteo.bat` |
-| Mac (con Python) | `avvia_meteo.command` |
-
-> `http://127.0.0.1:8787` funziona solo sul PC che ha avviato il server: non si può inviare ad altri.
+ZIP:  
+https://codeload.github.com/marcobalza64-netizen/marco/zip/refs/heads/cursor/meteo-bordighera-0955
 
 ---
 
 ## Cosa mostra
 - Condizioni attuali, vento, UV, pressione
 - Previsione oraria e 14 giorni
-- Mare (temperatura acqua e onde)
-- Alba e tramonto
+- Mare, alba e tramonto
 
 Dati: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
