@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <title>Meteo Bordighera</title>
+  <meta name="description" content="Meteo e previsioni in tempo reale per Bordighera: temperatura, vento, mare, UV e 14 giorni." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --ink: #14252f;
+  --ink-soft: #3d5563;
+  --foam: #f4f8fb;
+  --sea-deep: #0b3a4a;
+  --sea: #1a6b7c;
+  --sea-mid: #2f8fa0;
+  --sea-light: #7ec8d4;
+  --sun: #e8b15a;
+  --sun-soft: #f2d29a;
+  --sand: #d9c4a0;
+  --danger: #c45c3e;
+  --ok: #2f8a6a;
+  --line: rgba(20, 37, 47, 0.12);
+  --glass: rgba(244, 248, 251, 0.72);
+  --shadow: 0 18px 50px rgba(11, 58, 74, 0.14);
+  --radius: 18px;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Figtree", "Segoe UI", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-body);
+  background:
+    radial-gradient(1200px 700px at 80% -10%, rgba(232, 177, 90, 0.28), transparent 55%),
+    radial-gradient(900px 500px at 10% 20%, rgba(126, 200, 212, 0.35), transparent 50%),
+    linear-gradient(180deg, #d7ebf0 0%, #eef5f7 42%, #f7f3ea 100%);
+  overflow-x: hidden;
+}
+
+a {
+  color: var(--sea);
+}
+
+.sky {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.sky-glow {
+  position: absolute;
+  width: 48vmax;
+  height: 48vmax;
+  top: -18vmax;
+  right: -8vmax;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 177, 90, 0.55), rgba(232, 177, 90, 0) 68%);
+  animation: drift 18s ease-in-out infinite alternate;
+}
+
+.sky-haze {
+  position: absolute;
+  inset: auto 0 28% 0;
+  height: 40%;
+  background: linear-gradient(180deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  animation: haze 12s ease-in-out infinite alternate;
+}
+
+.sea-band {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: -8%;
+  height: 34%;
+  background:
+    linear-gradient(180deg, rgba(47, 143, 160, 0.08), rgba(11, 58, 74, 0.22)),
+    repeating-linear-gradient(
+      95deg,
+      rgba(255, 255, 255, 0.08) 0 18px,
+      transparent 18px 42px
+    );
+  transform: skewY(-3deg);
+  animation: swell 10s ease-in-out infinite alternate;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem 1.4rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.pulse {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  background: var(--sea-mid);
+  box-shadow: 0 0 0 0 rgba(47, 143, 160, 0.5);
+  animation: pulse 2s ease-out infinite;
+}
+
+.status.is-error .pulse {
+  background: var(--danger);
+  animation: none;
+}
+
+.refresh {
+  appearance: none;
+  border: 1px solid rgba(11, 58, 74, 0.18);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--sea-deep);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.refresh:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(11, 58, 74, 0.28);
+}
+
+.refresh:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.safari-banner {
+  max-width: 1100px;
+  margin: 0 auto 0.5rem;
+  padding: 0.9rem 1.25rem;
+  color: var(--sea-deep);
+  background: rgba(232, 177, 90, 0.28);
+  border-top: 1px solid rgba(11, 58, 74, 0.12);
+  border-bottom: 1px solid rgba(11, 58, 74, 0.12);
+  font-size: 0.98rem;
+  line-height: 1.45;
+}
+
+.safari-banner[hidden] {
+  display: none !important;
+}
+
+.safari-banner p {
+  margin: 0;
+}
+
+.safari-banner a {
+  font-weight: 700;
+  word-break: break-word;
+}
+
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 3.5rem;
+}
+
+.hero {
+  min-height: calc(100vh - 5.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 1.5rem 0 3rem;
+  animation: rise 0.9s ease both;
+}
+
+.place-line {
+  margin: 0 0 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sea);
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(4.2rem, 14vw, 8.5rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--sea-deep);
+}
+
+.headline {
+  margin: 0.85rem 0 0;
+  max-width: 28rem;
+  font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+  line-height: 1.45;
+  color: var(--ink-soft);
+}
+
+.hero-now {
+  margin-top: 2.4rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.temp {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(3.5rem, 10vw, 5.8rem);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ink);
+}
+
+.condition {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.feels {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.cta-hint {
+  margin: 1.8rem 0 0;
+  font-size: 0.95rem;
+  color: var(--ink-soft);
+}
+
+.section {
+  margin-top: 2.75rem;
+  animation: rise 0.8s ease both;
+  animation-delay: 0.12s;
+}
+
+.section-head h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.7rem);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.section-head p {
+  margin: 0.45rem 0 1.35rem;
+  max-width: 36rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.metric {
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.metric span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.metric strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 650;
+}
+
+.hourly-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(92px, 110px);
+  gap: 0.75rem;
+  overflow-x: auto;
+  padding: 0.25rem 0 1rem;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+.hour {
+  scroll-snap-align: start;
+  padding: 1rem 0.65rem;
+  text-align: center;
+  border-top: 1px solid var(--line);
+  min-height: 150px;
+}
+
+.hour .when {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sea);
+}
+
+.hour .deg {
+  display: block;
+  margin: 0.7rem 0 0.35rem;
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  font-weight: 600;
+}
+
+.hour .label,
+.hour .rain {
+  display: block;
+  font-size: 0.82rem;
+  color: var(--ink-soft);
+  line-height: 1.35;
+}
+
+.daily-list {
+  display: grid;
+  gap: 0;
+}
+
+.day {
+  display: grid;
+  grid-template-columns: 1.2fr 1.4fr 1fr 0.9fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.day:last-child {
+  border-bottom: 1px solid var(--line);
+}
+
+.day .name {
+  font-weight: 700;
+}
+
+.day .desc {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.day .temps {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 600;
+}
+
+.day .temps small {
+  margin-left: 0.35rem;
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+.day .extra {
+  text-align: right;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.marine,
+.sun-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.5rem;
+}
+
+.marine-item,
+.sun-item {
+  padding: 1rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.marine-item span,
+.sun-item span {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.marine-item strong,
+.sun-item strong {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 1.3rem;
+}
+
+.note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
+.footer {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.25rem 2.5rem;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin: 0.25rem 0;
+}
+
+.coords {
+  font-variant-numeric: tabular-nums;
+}
+
+body.is-loading .hero-now,
+body.is-loading .metrics,
+body.is-loading .hourly-scroll,
+body.is-loading .daily-list,
+body.is-loading .marine,
+body.is-loading .sun-grid {
+  opacity: 0.45;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(47, 143, 160, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(47, 143, 160, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(47, 143, 160, 0);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-4%, 6%, 0) scale(1.08);
+  }
+}
+
+@keyframes haze {
+  from {
+    opacity: 0.35;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0.7;
+    transform: translateY(12px);
+  }
+}
+
+@keyframes swell {
+  from {
+    transform: skewY(-3deg) translateY(0);
+  }
+  to {
+    transform: skewY(-2deg) translateY(-10px);
+  }
+}
+
+@media (min-width: 760px) {
+  .metrics {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .marine,
+  .sun-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .day {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.35rem 0.75rem;
+  }
+
+  .day .extra {
+    text-align: left;
+    grid-column: 1 / -1;
+  }
+
+  .brand {
+    font-size: clamp(3.6rem, 18vw, 5.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true">
+    <div class="sky-glow"></div>
+    <div class="sky-haze"></div>
+    <div class="sea-band"></div>
+  </div>
+
+  <header class="topbar">
+    <p class="status" id="status">
+      <span class="pulse" aria-hidden="true"></span>
+      <span id="statusText">Caricamento…</span>
+    </p>
+    <button type="button" class="refresh" id="refreshBtn" aria-label="Aggiorna dati">Aggiorna</button>
+  </header>
+
+  <div class="safari-banner" id="safariBanner" hidden>
+    <p>
+      Su <strong>iPad / iPhone (Safari)</strong> il file locale non può scaricare il meteo.
+      Apri invece questo link:
+      <a id="onlineLink" href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html">Apri Meteo Bordighera online</a>
+    </p>
+  </div>
+
+  <main>
+    <section class="hero" aria-labelledby="brand">
+      <p class="place-line" id="placeLine">Liguria · Riviera dei Fiori</p>
+      <h1 class="brand" id="brand">Bordighera</h1>
+      <p class="headline" id="headline">Meteo e previsioni sulla costa</p>
+      <div class="hero-now" aria-live="polite">
+        <p class="temp" id="temp">—°</p>
+        <p class="condition" id="condition">—</p>
+        <p class="feels" id="feels">—</p>
+      </div>
+      <p class="cta-hint" id="updatedAt">Attendere i dati da Open-Meteo…</p>
+    </section>
+
+    <section class="section" aria-labelledby="now-title">
+      <div class="section-head">
+        <h2 id="now-title">Ora a Bordighera</h2>
+        <p>Temperatura, vento, umidità, pressione e UV in questo momento.</p>
+      </div>
+      <div class="metrics" id="metrics"></div>
+    </section>
+
+    <section class="section" aria-labelledby="hourly-title">
+      <div class="section-head">
+        <h2 id="hourly-title">Prossime ore</h2>
+        <p>Andamento temperatura, probabilità di pioggia e vento.</p>
+      </div>
+      <div class="hourly-scroll" id="hourly" tabindex="0" aria-label="Previsione oraria"></div>
+    </section>
+
+    <section class="section" aria-labelledby="daily-title">
+      <div class="section-head">
+        <h2 id="daily-title">Prossimi 14 giorni</h2>
+        <p>Massime, minime, precipitazioni e vento dominante.</p>
+      </div>
+      <div class="daily-list" id="daily"></div>
+    </section>
+
+    <section class="section" aria-labelledby="marine-title">
+      <div class="section-head">
+        <h2 id="marine-title">Mare</h2>
+        <p>Temperatura dell’acqua e stato del mare davanti a Bordighera.</p>
+      </div>
+      <div class="marine" id="marine"></div>
+    </section>
+
+    <section class="section sun-section" aria-labelledby="sun-title">
+      <div class="section-head">
+        <h2 id="sun-title">Sole e giornata</h2>
+        <p>Alba, tramonto e indici utili per uscire.</p>
+      </div>
+      <div class="sun-grid" id="sun"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Funziona su Safari, Chrome ed Edge · su iPad apri il <a href="https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html">link online</a> · dati <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo</a></p>
+    <p class="coords" id="coords">43.78°N · 7.66°E · Europe/Rome</p>
+  </footer>
+
+  <script>
+(() => {
+  "use strict";
+
+  const WMO = {
+    0: { label: "Sereno", icon: "sole" },
+    1: { label: "Prevalentemente sereno", icon: "sole" },
+    2: { label: "Parzialmente nuvoloso", icon: "nuvoloso" },
+    3: { label: "Coperto", icon: "coperto" },
+    45: { label: "Nebbia", icon: "nebbia" },
+    48: { label: "Nebbia con brina", icon: "nebbia" },
+    51: { label: "Pioviggine leggera", icon: "pioggia" },
+    53: { label: "Pioviggine", icon: "pioggia" },
+    55: { label: "Pioviggine intensa", icon: "pioggia" },
+    56: { label: "Pioviggine gelata leggera", icon: "pioggia" },
+    57: { label: "Pioviggine gelata", icon: "pioggia" },
+    61: { label: "Pioggia debole", icon: "pioggia" },
+    63: { label: "Pioggia", icon: "pioggia" },
+    65: { label: "Pioggia forte", icon: "pioggia" },
+    66: { label: "Pioggia gelata leggera", icon: "pioggia" },
+    67: { label: "Pioggia gelata", icon: "pioggia" },
+    71: { label: "Neve debole", icon: "neve" },
+    73: { label: "Neve", icon: "neve" },
+    75: { label: "Neve intensa", icon: "neve" },
+    77: { label: "Granelli di neve", icon: "neve" },
+    80: { label: "Rovesci deboli", icon: "rovescio" },
+    81: { label: "Rovesci", icon: "rovescio" },
+    82: { label: "Rovesci violenti", icon: "rovescio" },
+    85: { label: "Rovesci di neve deboli", icon: "neve" },
+    86: { label: "Rovesci di neve", icon: "neve" },
+    95: { label: "Temporale", icon: "temporale" },
+    96: { label: "Temporale con grandine", icon: "temporale" },
+    99: { label: "Temporale forte con grandine", icon: "temporale" },
+  };
+
+  const els = {
+    status: document.getElementById("status"),
+    statusText: document.getElementById("statusText"),
+    refreshBtn: document.getElementById("refreshBtn"),
+    placeLine: document.getElementById("placeLine"),
+    headline: document.getElementById("headline"),
+    temp: document.getElementById("temp"),
+    condition: document.getElementById("condition"),
+    feels: document.getElementById("feels"),
+    updatedAt: document.getElementById("updatedAt"),
+    metrics: document.getElementById("metrics"),
+    hourly: document.getElementById("hourly"),
+    daily: document.getElementById("daily"),
+    marine: document.getElementById("marine"),
+    sun: document.getElementById("sun"),
+    coords: document.getElementById("coords"),
+  };
+
+  const REFRESH_MS = 10 * 60 * 1000;
+  const LOCATION = {
+    name: "Bordighera",
+    region: "Liguria, Italia",
+    latitude: 43.7804,
+    longitude: 7.6632,
+    timezone: "Europe/Rome",
+  };
+  const ONLINE_URL =
+    "https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html";
+  let timer = null;
+
+  function isAppleTouchDevice() {
+    const ua = navigator.userAgent || "";
+    if (/iPad|iPhone|iPod/i.test(ua)) return true;
+    // iPadOS desktop UA
+    return navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  }
+
+  function isLocalFile() {
+    return window.location.protocol === "file:";
+  }
+
+  function showSafariBanner(force) {
+    const banner = document.getElementById("safariBanner");
+    const link = document.getElementById("onlineLink");
+    if (!banner) return;
+    if (link) link.href = ONLINE_URL;
+    if (force || (isLocalFile() && isAppleTouchDevice())) {
+      banner.hidden = false;
+    }
+  }
+
+  function fetchJson(url) {
+    return fetch(url, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    }).then(function (res) {
+      if (!res.ok) {
+        throw new Error("Open-Meteo HTTP " + res.status);
+      }
+      return res.json();
+    });
+  }
+
+  function buildOpenMeteoUrls() {
+    const common = new URLSearchParams({
+      latitude: String(LOCATION.latitude),
+      longitude: String(LOCATION.longitude),
+      timezone: LOCATION.timezone,
+    });
+
+    const forecast = new URLSearchParams(common);
+    forecast.set("forecast_days", "14");
+    forecast.set("wind_speed_unit", "kmh");
+    forecast.set(
+      "current",
+      [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "is_day",
+        "precipitation",
+        "rain",
+        "showers",
+        "snowfall",
+        "weather_code",
+        "cloud_cover",
+        "pressure_msl",
+        "surface_pressure",
+        "wind_speed_10m",
+        "wind_direction_10m",
+        "wind_gusts_10m",
+        "uv_index",
+        "visibility",
+      ].join(",")
+    );
+    forecast.set(
+      "hourly",
+      [
+        "temperature_2m",
+        "relative_humidity_2m",
+        "apparent_temperature",
+        "precipitation_probability",
+        "precipitation",
+        "weather_code",
+        "cloud_cover",
+        "wind_speed_10m",
+        "wind_direction_10m",
+        "wind_gusts_10m",
+        "uv_index",
+        "is_day",
+      ].join(",")
+    );
+    forecast.set(
+      "daily",
+      [
+        "weather_code",
+        "temperature_2m_max",
+        "temperature_2m_min",
+        "apparent_temperature_max",
+        "apparent_temperature_min",
+        "sunrise",
+        "sunset",
+        "uv_index_max",
+        "precipitation_sum",
+        "precipitation_probability_max",
+        "rain_sum",
+        "showers_sum",
+        "snowfall_sum",
+        "precipitation_hours",
+        "wind_speed_10m_max",
+        "wind_gusts_10m_max",
+        "wind_direction_10m_dominant",
+      ].join(",")
+    );
+
+    const marine = new URLSearchParams(common);
+    marine.set("forecast_days", "7");
+    marine.set("current", "sea_surface_temperature,wave_height,wave_direction,wave_period");
+    marine.set("hourly", "sea_surface_temperature,wave_height,wave_direction,wave_period");
+    marine.set("daily", "wave_height_max,wave_direction_dominant,wave_period_max");
+
+    return {
+      forecast: "https://api.open-meteo.com/v1/forecast?" + forecast.toString(),
+      marine: "https://marine-api.open-meteo.com/v1/marine?" + marine.toString(),
+    };
+  }
+
+  async function fetchDirectOpenMeteo() {
+    // iOS Safari blocks network requests from file:// pages
+    if (isLocalFile() && isAppleTouchDevice()) {
+      showSafariBanner(true);
+      throw new Error(
+        "Safari su iPad/iPhone non consente dati da un file salvato. Usa il link online."
+      );
+    }
+
+    const urls = buildOpenMeteoUrls();
+    const forecast = await fetchJson(urls.forecast);
+
+    let marine = null;
+    let marine_error = null;
+    try {
+      marine = await fetchJson(urls.marine);
+    } catch (err) {
+      marine_error = (err && err.message) || String(err);
+    }
+
+    return {
+      location: LOCATION,
+      fetched_at: new Date().toISOString(),
+      forecast: forecast,
+      marine: marine,
+      marine_error: marine_error,
+      source: { name: "Open-Meteo", url: "https://open-meteo.com/", license: "CC BY 4.0" },
+      via: "browser",
+    };
+  }
+
+  function weatherLabel(code) {
+    return (WMO[code] && WMO[code].label) || `Codice meteo ${code}`;
+  }
+
+  function fmtTemp(v) {
+    if (v == null || Number.isNaN(Number(v))) return "—";
+    return `${Math.round(Number(v))}°`;
+  }
+
+  function fmtNum(v, digits = 0, suffix = "") {
+    if (v == null || Number.isNaN(Number(v))) return "—";
+    return `${Number(v).toFixed(digits)}${suffix}`;
+  }
+
+  function windDir(deg) {
+    if (deg == null || Number.isNaN(Number(deg))) return "—";
+    const dirs = ["N", "NE", "E", "SE", "S", "SO", "O", "NO"];
+    const i = Math.round(((Number(deg) % 360) / 45)) % 8;
+    return `${dirs[i]} (${Math.round(Number(deg))}°)`;
+  }
+
+  function visibilityKm(m) {
+    if (m == null || Number.isNaN(Number(m))) return "—";
+    return `${(Number(m) / 1000).toFixed(1)} km`;
+  }
+
+  const TZ = "Europe/Rome";
+
+  /** Open-Meteo returns wall-clock times in Europe/Rome without an offset. */
+  function parseRome(iso) {
+    if (!iso) return null;
+    if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(iso)) return new Date(iso);
+
+    const m = iso.match(
+      /^(\d{4})-(\d{2})-(\d{2})(?:T(\d{2}):(\d{2})(?::(\d{2}))?)?/
+    );
+    if (!m) return new Date(iso);
+
+    const year = Number(m[1]);
+    const month = Number(m[2]);
+    const day = Number(m[3]);
+    const hour = Number(m[4] || 12);
+    const minute = Number(m[5] || 0);
+    const second = Number(m[6] || 0);
+
+    // Find the UTC instant whose Rome wall-clock matches this local time.
+    let guess = Date.UTC(year, month - 1, day, hour, minute, second);
+    for (let i = 0; i < 3; i += 1) {
+      const parts = romeParts(new Date(guess));
+      const asUtc = Date.UTC(
+        parts.year,
+        parts.month - 1,
+        parts.day,
+        parts.hour,
+        parts.minute,
+        parts.second
+      );
+      const target = Date.UTC(year, month - 1, day, hour, minute, second);
+      guess += target - asUtc;
+    }
+    return new Date(guess);
+  }
+
+  function romeParts(date) {
+    const parts = new Intl.DateTimeFormat("en-GB", {
+      timeZone: TZ,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).formatToParts(date);
+    const get = function (type) {
+      for (let i = 0; i < parts.length; i += 1) {
+        if (parts[i].type === type) return parts[i].value;
+      }
+      return "0";
+    };
+    return {
+      year: Number(get("year")),
+      month: Number(get("month")),
+      day: Number(get("day")),
+      hour: Number(get("hour")),
+      minute: Number(get("minute")),
+      second: Number(get("second")),
+    };
+  }
+
+  function formatClock(date) {
+    if (!date) return "—";
+    return date.toLocaleTimeString("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: TZ,
+    });
+  }
+
+  function formatDayName(date, index) {
+    if (!date) return "—";
+    if (index === 0) return "Oggi";
+    if (index === 1) return "Domani";
+    const name = date.toLocaleDateString("it-IT", {
+      weekday: "long",
+      day: "numeric",
+      month: "short",
+      timeZone: TZ,
+    });
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  function formatHourLabel(date, isNow) {
+    if (!date) return "—";
+    if (isNow) return "Ora";
+    return date.toLocaleTimeString("it-IT", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: TZ,
+    });
+  }
+
+  function setStatus(ok, text) {
+    els.status.classList.toggle("is-error", !ok);
+    els.statusText.textContent = text;
+  }
+
+  function metric(label, value) {
+    return `<div class="metric"><span>${label}</span><strong>${value}</strong></div>`;
+  }
+
+  function renderCurrent(data) {
+    const cur = data.forecast.current || {};
+    const daily = data.forecast.daily || {};
+    const code = cur.weather_code;
+    const isDay = cur.is_day === 1;
+
+    els.placeLine.textContent = `${data.location.region}`;
+    els.headline.textContent = isDay
+      ? "Meteo e previsioni sulla costa"
+      : "Notte sulla Riviera dei Fiori";
+    els.temp.textContent = fmtTemp(cur.temperature_2m);
+    els.condition.textContent = weatherLabel(code);
+    els.feels.textContent = `Percepita ${fmtTemp(cur.apparent_temperature)} · Umidità ${fmtNum(cur.relative_humidity_2m, 0, "%")}`;
+
+    const fetched = parseRome(data.fetched_at);
+    els.updatedAt.textContent = fetched
+      ? `Aggiornato alle ${formatClock(fetched)} · fonte Open-Meteo`
+      : "Dati aggiornati";
+
+    els.coords.textContent = `${data.location.latitude.toFixed(2)}°N · ${data.location.longitude.toFixed(2)}°E · ${data.location.timezone}`;
+
+    els.metrics.innerHTML = [
+      metric("Vento", `${fmtNum(cur.wind_speed_10m, 0, " km/h")} ${windDir(cur.wind_direction_10m)}`),
+      metric("Raffiche", fmtNum(cur.wind_gusts_10m, 0, " km/h")),
+      metric("Precipitazioni", fmtNum(cur.precipitation, 1, " mm")),
+      metric("Nuvolosità", fmtNum(cur.cloud_cover, 0, "%")),
+      metric("Pressione", fmtNum(cur.pressure_msl, 0, " hPa")),
+      metric("UV", fmtNum(cur.uv_index, 1)),
+      metric("Visibilità", visibilityKm(cur.visibility)),
+      metric("Pioggia ora", fmtNum(cur.rain, 1, " mm")),
+    ].join("");
+
+    const sunrise = daily.sunrise && daily.sunrise[0] ? parseRome(daily.sunrise[0]) : null;
+    const sunset = daily.sunset && daily.sunset[0] ? parseRome(daily.sunset[0]) : null;
+    els.sun.innerHTML = [
+      metric("Alba", formatClock(sunrise)),
+      metric("Tramonto", formatClock(sunset)),
+      metric("UV max oggi", fmtNum(daily.uv_index_max && daily.uv_index_max[0], 1)),
+      metric("Pioggia oggi", fmtNum(daily.precipitation_sum && daily.precipitation_sum[0], 1, " mm")),
+    ].join("");
+  }
+
+  function renderHourly(data) {
+    const h = data.forecast.hourly || {};
+    const times = h.time || [];
+    const now = Date.now();
+    let start = times.findIndex((t) => {
+      const dt = parseRome(t);
+      return dt && dt.getTime() >= now - 30 * 60 * 1000;
+    });
+    if (start < 0) start = 0;
+    const end = Math.min(start + 24, times.length);
+
+    const chunks = [];
+    for (let i = start; i < end; i += 1) {
+      const date = parseRome(times[i]);
+      const isNow = i === start;
+      chunks.push(`
+        <article class="hour">
+          <span class="when">${formatHourLabel(date, isNow)}</span>
+          <span class="deg">${fmtTemp(h.temperature_2m[i])}</span>
+          <span class="label">${weatherLabel(h.weather_code[i])}</span>
+          <span class="rain">${fmtNum(h.precipitation_probability[i], 0, "%")} pioggia · ${fmtNum(h.wind_speed_10m[i], 0, " km/h")}</span>
+        </article>
+      `);
+    }
+    els.hourly.innerHTML = chunks.join("") || `<p class="note">Nessuna previsione oraria disponibile.</p>`;
+  }
+
+  function renderDaily(data) {
+    const d = data.forecast.daily || {};
+    const times = d.time || [];
+    const rows = times.map((t, i) => {
+      const date = parseRome(t);
+      return `
+        <article class="day">
+          <div class="name">${formatDayName(date, i)}</div>
+          <div class="desc">${weatherLabel(d.weather_code[i])}</div>
+          <div class="temps">${fmtTemp(d.temperature_2m_max[i])}<small>${fmtTemp(d.temperature_2m_min[i])}</small></div>
+          <div class="extra">${fmtNum(d.precipitation_probability_max[i], 0, "%")} pioggia · ${fmtNum(d.precipitation_sum[i], 1, " mm")}<br />vento ${fmtNum(d.wind_speed_10m_max[i], 0, " km/h")} ${windDir(d.wind_direction_10m_dominant[i])}</div>
+        </article>
+      `;
+    });
+    els.daily.innerHTML = rows.join("") || `<p class="note">Nessuna previsione giornaliera disponibile.</p>`;
+  }
+
+  function renderMarine(data) {
+    if (!data.marine || !data.marine.current) {
+      els.marine.innerHTML = `<p class="note">${data.marine_error ? `Mare non disponibile: ${data.marine_error}` : "Dati marini temporaneamente non disponibili."}</p>`;
+      return;
+    }
+    const m = data.marine.current;
+    const daily = data.marine.daily || {};
+    els.marine.innerHTML = [
+      metric("Temp. mare", fmtTemp(m.sea_surface_temperature)),
+      metric("Altezza onde", fmtNum(m.wave_height, 1, " m")),
+      metric("Periodo onde", fmtNum(m.wave_period, 0, " s")),
+      metric("Direzione onde", windDir(m.wave_direction)),
+      metric("Onde max (oggi)", fmtNum(daily.wave_height_max && daily.wave_height_max[0], 1, " m")),
+      metric("Periodo max (oggi)", fmtNum(daily.wave_period_max && daily.wave_period_max[0], 0, " s")),
+    ].join("");
+  }
+
+  function hasLocalApi() {
+    const { protocol, hostname } = window.location;
+    return (protocol === "http:" || protocol === "https:") &&
+      (hostname === "127.0.0.1" || hostname === "localhost");
+  }
+
+  async function loadWeather() {
+    document.body.classList.add("is-loading");
+    els.refreshBtn.disabled = true;
+    setStatus(true, "Aggiornamento…");
+    showSafariBanner(false);
+
+    try {
+      let data = null;
+
+      if (hasLocalApi()) {
+        try {
+          const res = await fetch("/api/weather?t=" + Date.now(), {
+            cache: "no-store",
+            mode: "cors",
+            credentials: "omit",
+          });
+          const payload = await res.json();
+          if (!res.ok) throw new Error(payload.error || "Errore server " + res.status);
+          data = payload;
+        } catch (err) {
+          console.warn("API locale non disponibile, uso Open-Meteo diretto…", err);
+          data = await fetchDirectOpenMeteo();
+        }
+      } else {
+        data = await fetchDirectOpenMeteo();
+      }
+
+      renderCurrent(data);
+      renderHourly(data);
+      renderDaily(data);
+      renderMarine(data);
+      setStatus(true, "Live");
+    } catch (err) {
+      console.error(err);
+      setStatus(false, "Errore");
+      const msg = err && err.message ? err.message : "Impossibile caricare i dati meteo.";
+      if (isLocalFile() && isAppleTouchDevice()) {
+        showSafariBanner(true);
+        els.updatedAt.innerHTML =
+          msg +
+          ' <a href="' +
+          ONLINE_URL +
+          '">Apri la versione online per Safari / iPad</a>';
+      } else {
+        els.updatedAt.textContent =
+          msg + " — Serve internet. Su iPad/Safari usa il link online (non il file salvato).";
+      }
+    } finally {
+      document.body.classList.remove("is-loading");
+      els.refreshBtn.disabled = false;
+    }
+  }
+
+  function schedule() {
+    if (timer) clearInterval(timer);
+    timer = setInterval(loadWeather, REFRESH_MS);
+  }
+
+  els.refreshBtn.addEventListener("click", function () {
+    loadWeather();
+    schedule();
+  });
+
+  showSafariBanner(false);
+  loadWeather();
+  schedule();
+})();
+
+  </script>
+</body>
+</html>

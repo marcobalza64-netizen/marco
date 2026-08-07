@@ -1,62 +1,38 @@
-# Monitor NVIDIA (Europa) — tempo reale
+# Meteo Bordighera
 
-App per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
-
-**Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac.
-
-## Fonti dati
-- **Xetra / Francoforte**: Börse Frankfurt → **tempo reale**
-- **Tradegate**: mercato Europa retail → **tempo reale**
-- **NASDAQ**: Yahoo Finance → near real-time
+App meteo e previsioni per **Bordighera** (Liguria). Funziona su **Safari**, Chrome ed Edge.
 
 ---
 
-## Versione WEB (consigliata)
+## iPad / iPhone (Safari) — importante
 
-Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.
+Safari **non permette** a un file HTML salvato sul dispositivo di scaricare i dati meteo.
 
-1. Vai su: https://github.com/marcobalza64-netizen/marco  
-2. **Code → Download ZIP** ed estrai  
-3. **Doppio clic** su `avvia_web.command`  
-   (se il Mac blocca: tasto destro → **Apri** → **Apri**)
+Usa questo **link online** (copialo e aprilo in Safari):
 
-Si apre la pagina `http://127.0.0.1:8765` con il prezzo live.  
-Per uscire: nel Terminale premi `Ctrl + C`.
+**https://htmlpreview.github.io/?https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html**
 
-Oppure da Terminale:
-
-```bash
-cd ~/Downloads/marco-main
-python3 web_app.py
-```
+Puoi anche aggiungerlo a Home (Condividi → Aggiungi a Home).
 
 ---
 
-## Versione Terminale
+## Windows / Mac (Chrome o Edge)
 
-- **Doppio clic** su `avvia.command`  
-  oppure:
+1. Scarica `Meteo-Bordighera.html`
+2. Doppio clic → si apre nel browser
 
-```bash
-cd ~/Downloads/marco-main
-python3 nvidia_monitor.py
-```
+File diretto:  
+https://raw.githubusercontent.com/marcobalza64-netizen/marco/cursor/meteo-bordighera-0955/Meteo-Bordighera.html  
+(tasto destro → Salva con nome)
 
-### Opzioni terminale
+ZIP:  
+https://codeload.github.com/marcobalza64-netizen/marco/zip/refs/heads/cursor/meteo-bordighera-0955
 
-```bash
-python3 nvidia_monitor.py              # Xetra Europa tempo reale (euro)
-python3 nvidia_monitor.py -m frankfurt # Francoforte tempo reale
-python3 nvidia_monitor.py -m tradegate # Tradegate tempo reale
-python3 nvidia_monitor.py -m nasdaq    # USA (dollari)
-python3 nvidia_monitor.py -i 1         # aggiorna ogni 1 secondo
-```
+---
 
-## Se manca Python
+## Cosa mostra
+- Condizioni attuali, vento, UV, pressione
+- Previsione oraria e 14 giorni
+- Mare, alba e tramonto
 
-Scarica Python da https://www.python.org/downloads/  
-Installa, poi ripeti il doppio clic su `avvia_web.command`.
-
-## Nota
-
-Solo a scopo informativo, non è un consiglio finanziario.
+Dati: [Open-Meteo](https://open-meteo.com/) (CC BY 4.0)
