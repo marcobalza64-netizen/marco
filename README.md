@@ -1,26 +1,27 @@
-# Monitor NVIDIA (Europa) — tempo reale
+# Monitor titoli Europa — tempo reale
 
-App per vedere il prezzo **NVIDIA** in tempo reale sul mercato europeo.
+App web per vedere i prezzi di **NVIDIA**, **Tesla** e **Rheinmetall** in tempo reale sul mercato europeo.
 
 **Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac.
 
 ## Fonti dati
 - **Xetra / Francoforte**: Börse Frankfurt → **tempo reale**
 - **Tradegate**: mercato Europa retail → **tempo reale**
-- **NASDAQ**: Yahoo Finance → near real-time
+- **NASDAQ / Yahoo**: Yahoo Finance → near real-time
 
 ---
 
 ## Versione WEB (consigliata)
 
-Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.
+Si apre nel browser e si aggiorna **in automatico** ogni 2 secondi.  
+Puoi cambiare titolo (NVIDIA / Tesla / Rheinmetall) e mercato dalla pagina.
 
 1. Vai su: https://github.com/marcobalza64-netizen/marco  
 2. **Code → Download ZIP** ed estrai  
 3. **Doppio clic** su `avvia_web.command`  
    (se il Mac blocca: tasto destro → **Apri** → **Apri**)
 
-Si apre la pagina `http://127.0.0.1:8765` con il prezzo live.  
+Si apre la pagina `http://127.0.0.1:8765` con i prezzi live.  
 Per uscire: nel Terminale premi `Ctrl + C`.
 
 Oppure da Terminale:
@@ -39,17 +40,18 @@ python3 web_app.py
 
 ```bash
 cd ~/Downloads/marco-main
-python3 nvidia_monitor.py
+python3 stock_monitor.py
 ```
 
 ### Opzioni terminale
 
 ```bash
-python3 nvidia_monitor.py              # Xetra Europa tempo reale (euro)
-python3 nvidia_monitor.py -m frankfurt # Francoforte tempo reale
-python3 nvidia_monitor.py -m tradegate # Tradegate tempo reale
-python3 nvidia_monitor.py -m nasdaq    # USA (dollari)
-python3 nvidia_monitor.py -i 1         # aggiorna ogni 1 secondo
+python3 stock_monitor.py                       # NVIDIA Xetra (euro)
+python3 stock_monitor.py -s tesla              # Tesla
+python3 stock_monitor.py -s rheinmetall        # Rheinmetall
+python3 stock_monitor.py -s tesla -m tradegate # Tesla su Tradegate
+python3 stock_monitor.py -s nvidia -m nasdaq   # NVIDIA USA (dollari)
+python3 stock_monitor.py -i 1                  # aggiorna ogni 1 secondo
 ```
 
 ## Se manca Python
