@@ -1,8 +1,9 @@
 #!/bin/bash
-# Mac: doppio clic per aprire il monitor NVIDIA nel browser
+# Mac: doppio clic per aprire il monitor titoli nel browser
 cd "$(dirname "$0")"
 
-echo "=== Monitor NVIDIA Web ==="
+echo "=== Monitor Titoli Web ==="
+echo "NVIDIA · Tesla · Rheinmetall"
 echo
 
 if ! command -v python3 >/dev/null 2>&1; then

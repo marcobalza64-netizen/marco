@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-Monitor NVIDIA — versione web in tempo reale.
-Apre il browser e aggiorna il prezzo in automatico.
+Monitor titoli — versione web in tempo reale.
+NVIDIA · Tesla · Rheinmetall
+Apre il browser e aggiorna i prezzi in automatico.
 Nessuna libreria da installare.
 """
 
@@ -18,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
-from nvidia_monitor import MARKETS, fetch_quote
+from stock_monitor import STOCKS, fetch_quote, get_market, get_stock
 
 ROOT = Path(__file__).resolve().parent
 WEB_DIR = ROOT / "web"
@@ -26,10 +27,14 @@ DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
 
 
-def quote_to_dict(market_key: str) -> dict:
-    q = fetch_quote(market_key)
-    market = MARKETS[market_key]
+def quote_to_dict(stock_key: str, market_key: str) -> dict:
+    stock = get_stock(stock_key)
+    market = get_market(stock_key, market_key)
+    q = fetch_quote(market_key, stock_key)
     return {
+        "stock": stock_key,
+        "stock_name": stock["name"],
+        "accent": stock.get("accent"),
         "market": market_key,
         "market_name": market["name"],
         "symbol": q.symbol,
@@ -54,7 +59,7 @@ def quote_to_dict(market_key: str) -> dict:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "NvidiaMonitorWeb/1.0"
+    server_version = "StockMonitorWeb/2.0"
 
     def log_message(self, fmt: str, *args) -> None:
         sys.stderr.write("[%s] %s\n" % (self.log_date_time_string(), fmt % args))
@@ -74,11 +79,37 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:  # noqa: N802
         parsed = urlparse(self.path)
         path = parsed.path
+        qs = parse_qs(parsed.query)
 
         if path in {"/", "/index.html"}:
             return self._serve_file(WEB_DIR / "index.html")
 
+        if path == "/api/stocks":
+            stocks = [
+                {
+                    "id": key,
+                    "name": meta["name"],
+                    "isin": meta["isin"],
+                    "accent": meta.get("accent"),
+                    "markets": [
+                        {
+                            "id": mkey,
+                            "name": mmeta["name"],
+                            "symbol": mmeta["symbol"],
+                            "currency": mmeta["currency"],
+                            "realtime": bool(mmeta.get("realtime")),
+                        }
+                        for mkey, mmeta in meta["markets"].items()
+                    ],
+                }
+                for key, meta in STOCKS.items()
+            ]
+            return self._send_json(200, {"stocks": stocks})
+
         if path == "/api/markets":
+            stock_key = (qs.get("stock") or ["nvidia"])[0]
+            if stock_key not in STOCKS:
+                return self._send_json(400, {"error": f"Titolo non valido: {stock_key}"})
             markets = [
                 {
                     "id": key,
@@ -87,21 +118,22 @@ class Handler(BaseHTTPRequestHandler):
                     "currency": meta["currency"],
                     "realtime": bool(meta.get("realtime")),
                 }
-                for key, meta in MARKETS.items()
+                for key, meta in STOCKS[stock_key]["markets"].items()
             ]
-            return self._send_json(200, {"markets": markets})
+            return self._send_json(200, {"stock": stock_key, "markets": markets})
 
         if path == "/api/quote":
-            qs = parse_qs(parsed.query)
-            market = (qs.get("market") or ["xetra"])[0]
-            if market not in MARKETS:
-                return self._send_json(400, {"error": f"Mercato non valido: {market}"})
+            stock_key = (qs.get("stock") or ["nvidia"])[0]
+            market_key = (qs.get("market") or ["xetra"])[0]
+            if stock_key not in STOCKS:
+                return self._send_json(400, {"error": f"Titolo non valido: {stock_key}"})
+            if market_key not in STOCKS[stock_key]["markets"]:
+                return self._send_json(400, {"error": f"Mercato non valido: {market_key}"})
             try:
-                return self._send_json(200, quote_to_dict(market))
+                return self._send_json(200, quote_to_dict(stock_key, market_key))
             except Exception as exc:  # noqa: BLE001
                 return self._send_json(502, {"error": str(exc)})
 
-        # Static files under /web or direct names
         candidate = WEB_DIR / path.lstrip("/")
         if candidate.is_file() and WEB_DIR in candidate.resolve().parents:
             return self._serve_file(candidate)
@@ -135,7 +167,7 @@ def open_browser_later(url: str, delay: float = 0.8) -> None:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Monitor NVIDIA web (tempo reale)")
+    parser = argparse.ArgumentParser(description="Monitor titoli web (tempo reale)")
     parser.add_argument("--host", default=DEFAULT_HOST, help="Host (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT, help="Porta (default: 8765)")
     parser.add_argument("--no-browser", action="store_true", help="Non aprire il browser")
@@ -150,7 +182,8 @@ def main() -> int:
 
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     url = f"http://{args.host}:{args.port}/"
-    print("=== Monitor NVIDIA Web ===")
+    print("=== Monitor Titoli Web ===")
+    print("NVIDIA · Tesla · Rheinmetall")
     print(f"Apri nel browser: {url}")
     print("Aggiornamento automatico ogni 2 secondi.")
     print("Per uscire: Ctrl+C")

@@ -1,8 +1,9 @@
 #!/bin/bash
-# Mac: doppio clic su questo file per avviare il monitor NVIDIA
+# Mac: doppio clic su questo file per avviare il monitor titoli
 cd "$(dirname "$0")"
 
-echo "=== Monitor NVIDIA ==="
+echo "=== Monitor Titoli ==="
+echo "NVIDIA · Tesla · Rheinmetall"
 echo
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -16,7 +17,7 @@ fi
 
 echo "Avvio in corso… (per uscire: Ctrl+C)"
 echo
-python3 nvidia_monitor.py
+python3 stock_monitor.py
 
 echo
 read -r -p "Premi Invio per chiudere..."
