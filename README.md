@@ -4,6 +4,38 @@ App web per vedere i prezzi di **NVIDIA**, **Tesla** e **Rheinmetall** in tempo 
 
 **Non serve installare nulla** (niente pip): usa solo Python già presente sul Mac.
 
+---
+
+## Spettro audio (microfono → grafico colorato)
+
+Visualizzatore in tempo reale delle **frequenze** catturate dal microfono del Mac.
+
+1. **Doppio clic** su `avvia_spectrum.command`  
+   (se il Mac blocca: tasto destro → **Apri** → **Apri**)
+2. Alla prima esecuzione installa da solo le dipendenze (`numpy`, `sounddevice`, `matplotlib`)
+3. Se macOS chiede l’accesso al **microfono**, premi **OK / Consenti**
+4. Si apre una finestra con lo spettro colorato in tempo reale  
+   Per uscire: chiudi la finestra
+
+Oppure da Terminale:
+
+```bash
+cd ~/Downloads/marco-main
+python3 -m venv .venv-spectrum
+source .venv-spectrum/bin/activate
+pip install -r requirements-spectrum.txt
+python spectrum_visualizer.py
+```
+
+Opzioni utili:
+
+```bash
+python spectrum_visualizer.py --list-devices   # elenca microfoni
+python spectrum_visualizer.py --device 1       # scegli un microfono
+```
+
+Se non senti audio: **Impostazioni di Sistema → Privacy e sicurezza → Microfono** e abilita Terminal / Python.
+
 ## Fonti dati
 - **Xetra / Francoforte**: Börse Frankfurt → **tempo reale**
 - **Tradegate**: mercato Europa retail → **tempo reale**
