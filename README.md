@@ -10,11 +10,10 @@ App web per vedere i prezzi di **NVIDIA**, **Tesla** e **Rheinmetall** in tempo 
 
 Visualizzatore microfono → spettro frequenze in tempo reale.
 
-Pacchetto completo nella cartella **`spettro-frequenza/`** (Mac / Windows / Linux):
+**Download ZIP diretto:**  
+https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-frequenza-completo-9461.zip
 
-1. Scarica il progetto: **Code → Download ZIP** ed estrai
-2. Entra in `spettro-frequenza`
-3. Avvia con `avvia.command` (Mac), `avvia.bat` (Windows) o `./avvia.sh` (Linux)
+Dopo aver estratto lo ZIP, entra in `spettro-frequenza` e avvia con `avvia.command` (Mac), `avvia.bat` (Windows) o `./avvia.sh` (Linux).
 
 Istruzioni dettagliate: [`spettro-frequenza/README.md`](spettro-frequenza/README.md)
 

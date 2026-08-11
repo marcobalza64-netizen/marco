@@ -6,11 +6,19 @@ Funziona su **Mac**, **Windows** e **Linux**.
 
 ---
 
-## Come scaricare
+## Download diretto (ZIP)
 
-1. Apri il repository: https://github.com/marcobalza64-netizen/marco
-2. Vai nella cartella **`spettro-frequenza`**
-3. Oppure scarica tutto il progetto: **Code → Download ZIP**, estrai, poi entra in `spettro-frequenza`
+Clicca qui per scaricare subito il ZIP:
+
+**https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-frequenza-completo-9461.zip**
+
+1. Scarica e **estrai** lo ZIP  
+2. Apri la cartella `marco-cursor-spettro-frequenza-completo-9461`  
+3. Entra in **`spettro-frequenza`**  
+4. Avvia con `avvia.command` (Mac), `avvia.bat` (Windows) o `./avvia.sh` (Linux)
+
+### Alternativa da GitHub
+Sul repository: pulsante verde **Code** → **Download ZIP**
 
 ---
 
