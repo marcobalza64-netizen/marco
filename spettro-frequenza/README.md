@@ -1,131 +1,60 @@
-# Spettro Frequenza — Visualizzatore audio Python
+# Spettro Frequenza — solo programma Python
 
-Applicazione Python completa: ascolta il **microfono** e mostra lo **spettro delle frequenze** in tempo reale (barre colorate).
+Questa cartella contiene **solo** l’app spettro audio (niente altre applicazioni).
 
-Funziona su **Mac**, **Windows** e **Linux**.
+## Download ZIP (solo questo programma)
 
----
+Scarica **questo file** (non tutto il repository):
 
-## Download diretto (ZIP)
+https://github.com/marcobalza64-netizen/marco/raw/cursor/spettro-frequenza-completo-9461/spettro-frequenza-completo.zip
 
-Clicca qui per scaricare subito il ZIP:
+Oppure usa il branch dedicato (ZIP pulito, solo spettro):
 
-**https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-frequenza-completo-9461.zip**
+https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-solo-python-9461.zip
 
-1. Scarica e **estrai** lo ZIP  
-2. Apri la cartella `marco-cursor-spettro-frequenza-completo-9461`  
-3. Entra in **`spettro-frequenza`**  
-4. Avvia con `avvia.command` (Mac), `avvia.bat` (Windows) o `./avvia.sh` (Linux)
-
-### Alternativa da GitHub
-Sul repository: pulsante verde **Code** → **Download ZIP**
-
----
+1. Estrai lo ZIP  
+2. Avvia con `avvia.command` (Mac) o `avvia.bat` (Windows)  
+3. Consenti il microfono
 
 ## Requisiti
 
 - **Python 3.10+** — https://www.python.org/downloads/
-- Microfono collegato / integrato
-- Permesso microfono dal sistema operativo
-
----
+- Microfono
+- Permesso microfono dal sistema
 
 ## Avvio rapido
 
 ### Mac
-
-1. Doppio clic su `avvia.command`  
-   (se macOS blocca: tasto destro → **Apri** → **Apri**)
-2. Alla prima esecuzione crea da solo l’ambiente e installa le librerie
-3. Se chiede il microfono → **Consenti**
-4. Per uscire: chiudi la finestra del grafico
+Doppio clic su `avvia.command` (se blocca: tasto destro → Apri → Apri)
 
 ### Windows
-
-1. Doppio clic su `avvia.bat`
-2. Alla prima esecuzione installa le dipendenze
-3. Se Windows chiede il microfono → **Consenti**
-4. Per uscire: chiudi la finestra del grafico
+Doppio clic su `avvia.bat`
 
 ### Linux
-
 ```bash
-cd spettro-frequenza
 chmod +x avvia.sh
 ./avvia.sh
 ```
 
-Su Debian/Ubuntu, se manca PortAudio:
-
+### Da Terminale
 ```bash
-sudo apt install libportaudio2 portaudio19-dev python3-venv
-```
-
----
-
-## Avvio da Terminale (tutti i sistemi)
-
-```bash
-cd spettro-frequenza
 python3 -m venv .venv
-```
-
-**Mac / Linux:**
-
-```bash
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python spectrum_visualizer.py
 ```
 
-**Windows (Prompt dei comandi):**
-
-```bat
-.venv\Scripts\activate
-pip install -r requirements.txt
-python spectrum_visualizer.py
-```
-
----
-
-## Opzioni utili
-
+## Opzioni
 ```bash
-python spectrum_visualizer.py --list-devices   # elenca microfoni
-python spectrum_visualizer.py --device 1       # scegli un microfono
+python spectrum_visualizer.py --list-devices
+python spectrum_visualizer.py --device 1
 ```
 
----
-
-## Contenuto del pacchetto
-
-| File | Descrizione |
-|------|-------------|
-| `spectrum_visualizer.py` | Programma principale (FFT + grafico) |
-| `requirements.txt` | Dipendenze Python (`numpy`, `sounddevice`, `matplotlib`) |
-| `avvia.command` | Launcher Mac (doppio clic) |
-| `avvia.bat` | Launcher Windows (doppio clic) |
+## File inclusi
+| File | Ruolo |
+|------|--------|
+| `spectrum_visualizer.py` | Programma |
+| `requirements.txt` | Dipendenze |
+| `avvia.command` | Launcher Mac |
+| `avvia.bat` | Launcher Windows |
 | `avvia.sh` | Launcher Linux |
-| `README.md` | Queste istruzioni |
-
----
-
-## Problemi comuni
-
-**Non sente il microfono (Mac)**  
-Impostazioni di Sistema → Privacy e sicurezza → Microfono → abilita Terminal / Python.
-
-**PortAudio non trovato (Linux)**  
-`sudo apt install libportaudio2 portaudio19-dev`
-
-**Finestra non si apre**  
-Serve un display grafico (sul Mac/Windows ok; su server Linux senza GUI non funziona).
-
----
-
-## Cosa fa
-
-1. Cattura audio dal microfono (44.1 kHz)
-2. Calcola lo spettro con FFT
-3. Mostra barre su scala logaritmica (40 Hz – 16 kHz)
-4. Aggiorna il grafico in tempo reale

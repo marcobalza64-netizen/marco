@@ -6,16 +6,18 @@ App web per vedere i prezzi di **NVIDIA**, **Tesla** e **Rheinmetall** in tempo 
 
 ---
 
-## Spettro Frequenza (Python completo)
+## Spettro Frequenza (solo programma Python)
 
-Visualizzatore microfono → spettro frequenze in tempo reale.
+Visualizzatore microfono → spettro frequenze. **Solo questa app**, niente altro.
 
-**Download ZIP diretto:**  
-https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-frequenza-completo-9461.zip
+**Download ZIP (solo spettro):**  
+https://github.com/marcobalza64-netizen/marco/raw/cursor/spettro-frequenza-completo-9461/spettro-frequenza-completo.zip
 
-Dopo aver estratto lo ZIP, entra in `spettro-frequenza` e avvia con `avvia.command` (Mac), `avvia.bat` (Windows) o `./avvia.sh` (Linux).
+Oppure branch pulito:  
+https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-solo-python-9461.zip
 
-Istruzioni dettagliate: [`spettro-frequenza/README.md`](spettro-frequenza/README.md)
+Estrai → avvia `avvia.command` (Mac) / `avvia.bat` (Windows).  
+Dettagli: [`spettro-frequenza/README.md`](spettro-frequenza/README.md)
 
 ## Fonti dati
 - **Xetra / Francoforte**: Börse Frankfurt → **tempo reale**
