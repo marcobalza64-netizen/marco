@@ -1,40 +1,24 @@
 # Spettro Frequenza — solo programma Python
 
-Questa cartella contiene **solo** l’app spettro audio (niente altre applicazioni).
+Visualizzatore **scenografico** del microfono in tempo reale, con **regolazione sensibilità**.
 
 ## Download ZIP (solo questo programma)
 
-Scarica **questo file** (non tutto il repository):
-
 https://github.com/marcobalza64-netizen/marco/raw/cursor/spettro-frequenza-completo-9461/spettro-frequenza-completo.zip
 
-Oppure usa il branch dedicato (ZIP pulito, solo spettro):
+Oppure branch pulito:
 
 https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-solo-python-9461.zip
 
+## Avvio (Python 3 già installato)
+
 1. Estrai lo ZIP  
-2. Avvia con `avvia.command` (Mac) o `avvia.bat` (Windows)  
-3. Consenti il microfono
+2. **Mac:** doppio clic su `avvia.command`  
+   **Windows:** doppio clic su `avvia.bat`  
+   **Linux:** `chmod +x avvia.sh && ./avvia.sh`  
+3. Consenti il microfono  
 
-## Requisiti
-
-- **Python 3.10+** — https://www.python.org/downloads/
-- Microfono
-- Permesso microfono dal sistema
-
-## Avvio rapido
-
-### Mac
-Doppio clic su `avvia.command` (se blocca: tasto destro → Apri → Apri)
-
-### Windows
-Doppio clic su `avvia.bat`
-
-### Linux
-```bash
-chmod +x avvia.sh
-./avvia.sh
-```
+Alla prima esecuzione installa da solo le librerie.
 
 ### Da Terminale
 ```bash
@@ -44,13 +28,24 @@ pip install -r requirements.txt
 python spectrum_visualizer.py
 ```
 
-## Opzioni
+## Controlli
+- **Slider “Sensibilità”** in basso → regola l’ampiezza dello spettro  
+- Tasti **+ / −** (o frecce ↑ ↓) → stessa regolazione  
+- Chiudi la finestra per uscire  
+
 ```bash
+python spectrum_visualizer.py --sensitivity 2.0
 python spectrum_visualizer.py --list-devices
 python spectrum_visualizer.py --device 1
 ```
 
-## File inclusi
+## Cosa vedi
+- Barre a **specchio** con bagliore  
+- Forma d’onda in alto  
+- Picchi luminosi e colori dinamici  
+- Slider sensibilità / ampiezza  
+
+## File
 | File | Ruolo |
 |------|--------|
 | `spectrum_visualizer.py` | Programma |

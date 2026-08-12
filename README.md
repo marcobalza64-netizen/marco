@@ -8,15 +8,13 @@ App web per vedere i prezzi di **NVIDIA**, **Tesla** e **Rheinmetall** in tempo 
 
 ## Spettro Frequenza (solo programma Python)
 
-Visualizzatore microfono → spettro frequenze. **Solo questa app**, niente altro.
+Visualizzatore scenografico microfono → spettro, con **slider sensibilità**.
 
 **Download ZIP (solo spettro):**  
 https://github.com/marcobalza64-netizen/marco/raw/cursor/spettro-frequenza-completo-9461/spettro-frequenza-completo.zip
 
-Oppure branch pulito:  
-https://github.com/marcobalza64-netizen/marco/archive/refs/heads/cursor/spettro-solo-python-9461.zip
-
-Estrai → avvia `avvia.command` (Mac) / `avvia.bat` (Windows).  
+Estrai → `avvia.command` (Mac) / `avvia.bat` (Windows).  
+Slider in basso o tasti `+` / `−` per l’ampiezza.  
 Dettagli: [`spettro-frequenza/README.md`](spettro-frequenza/README.md)
 
 ## Fonti dati
