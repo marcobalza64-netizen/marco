@@ -1,6 +1,6 @@
 # Spettro Frequenza (solo programma Python)
 
-Visualizzatore scenografico dal microfono, con regolazione sensibilità.
+Visualizzatore scenografico dal microfono, con regolazione sensibilità e valori di frequenza in Hz.
 
 ## Avvio
 1. Estrai lo ZIP
@@ -17,6 +17,7 @@ python spectrum_visualizer.py
 ```
 
 ## Controlli
-- Slider **Sensibilità** in basso = ampiezza dello spettro
+- Slider **Sensibilità** = ampiezza dello spettro
 - Tasti **+ / −** oppure frecce ↑ ↓
-- Chiudi la finestra per uscire
+- In basso: **scala frequenze in Hz**
+- In alto a destra: **frequenza dominante** in tempo reale
