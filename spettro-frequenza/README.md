@@ -40,9 +40,10 @@ python spectrum_visualizer.py --device 1
 ```
 
 ## Cosa vedi
+- **Scala frequenze in Hz** sotto lo spettro (40 Hz … 16 kHz)  
+- **Frequenza dominante** in tempo reale (numero grande + linea sul picco)  
 - Barre a **specchio** con bagliore  
 - Forma d’onda in alto  
-- Picchi luminosi e colori dinamici  
 - Slider sensibilità / ampiezza  
 
 ## File

@@ -86,6 +86,19 @@ def bin_spectrum(magnitudes: np.ndarray, freqs: np.ndarray, edges: np.ndarray) -
     return bars
 
 
+def format_hz(freq: float) -> str:
+    """Formatta una frequenza in modo leggibile (Hz / kHz)."""
+    if freq < 1000:
+        return f"{freq:.0f} Hz"
+    if freq < 10_000:
+        return f"{freq / 1000:.2f} kHz".replace(".", ",")
+    return f"{freq / 1000:.1f} kHz".replace(".", ",")
+
+
+def nearest_bar_index(centers: np.ndarray, target_hz: float) -> int:
+    return int(np.argmin(np.abs(centers - target_hz)))
+
+
 class SpectrumVisualizer:
     def __init__(
         self,
@@ -111,6 +124,8 @@ class SpectrumVisualizer:
         self.cmap = stage_colormap()
         self.pulse = 0.0
         self.t = 0.0
+        self.peak_freq_hz = 0.0
+        self.peak_freq_smooth = 0.0
 
         plt.rcParams["font.family"] = "DejaVu Sans"
         self.fig = plt.figure(figsize=(13.5, 7.6), facecolor="#03070d")
@@ -138,7 +153,7 @@ class SpectrumVisualizer:
             spine.set_visible(False)
 
         self.ax.set_xlim(-1.5, N_BARS + 0.5)
-        self.ax.set_ylim(-1.15, 1.25)
+        self.ax.set_ylim(-1.28, 1.28)
         self.ax.set_xticks([])
         self.ax.set_yticks([])
 
@@ -148,7 +163,7 @@ class SpectrumVisualizer:
         self.ax_wave.set_yticks([])
 
         # Vignetta / atmosfera
-        self.ax.axhspan(-1.2, 0, color="#02060c", alpha=0.55, zorder=0)
+        self.ax.axhspan(-1.35, 0, color="#02060c", alpha=0.55, zorder=0)
         self.ax.axhline(0, color="#1a3348", linewidth=1.1, alpha=0.7, zorder=1)
         for y in (0.35, 0.7, 1.0, -0.35, -0.7, -1.0):
             self.ax.axhline(y, color="#102033", linewidth=0.6, alpha=0.35, zorder=1)
@@ -169,7 +184,7 @@ class SpectrumVisualizer:
         self.subtitle = self.ax.text(
             0.5,
             0.915,
-            "microfono live  ·  regolabile",
+            "microfono live  ·  valori in Hz  ·  regolabile",
             transform=self.ax.transAxes,
             ha="center",
             va="center",
@@ -177,6 +192,33 @@ class SpectrumVisualizer:
             fontsize=9,
             zorder=20,
         )
+
+        # Lettura grande della frequenza dominante
+        self.freq_readout = self.ax.text(
+            0.98,
+            0.90,
+            "— Hz",
+            transform=self.ax.transAxes,
+            ha="right",
+            va="top",
+            color="#f2d06b",
+            fontsize=20,
+            fontweight="bold",
+            family="DejaVu Sans Mono",
+            zorder=21,
+        )
+        self.freq_readout_label = self.ax.text(
+            0.98,
+            0.825,
+            "frequenza dominante",
+            transform=self.ax.transAxes,
+            ha="right",
+            va="top",
+            color="#8aa3b8",
+            fontsize=8,
+            zorder=21,
+        )
+
         self.status = self.ax.text(
             0.02,
             0.04,
@@ -201,22 +243,74 @@ class SpectrumVisualizer:
             zorder=20,
         )
 
-        # Etichette frequenza decorative
-        labels = ["40 Hz", "120", "400", "1k", "3k", "8k", "16k"]
-        positions = np.linspace(0.04, 0.96, len(labels))
-        for pos, lab in zip(positions, labels):
-            self.ax.text(
-                pos,
-                0.5,
-                lab,
-                transform=self.ax.transAxes,
-                ha="center",
-                va="center",
+        self._draw_frequency_scale()
+
+    def _draw_frequency_scale(self) -> None:
+        """Scala frequenze in Hz allineata alle barre dello spettro."""
+        # Marche principali (etichette) e secondarie (solo tacche)
+        major_targets = [40, 60, 100, 200, 400, 800, 1000, 2000, 4000, 8000, 16000]
+        minor_targets = [50, 80, 150, 300, 600, 1500, 3000, 6000, 12000]
+
+        for hz in minor_targets:
+            if hz < self.centers[0] or hz > self.centers[-1]:
+                continue
+            x = nearest_bar_index(self.centers, hz)
+            self.ax.plot(
+                [x, x],
+                [-1.08, -1.02],
                 color="#2a4258",
-                fontsize=7,
-                zorder=2,
-                alpha=0.85,
+                linewidth=0.8,
+                alpha=0.7,
+                zorder=6,
+                solid_capstyle="round",
             )
+
+        for hz in major_targets:
+            if hz < self.centers[0] * 0.95 or hz > self.centers[-1] * 1.02:
+                continue
+            x = nearest_bar_index(self.centers, float(hz))
+            self.ax.plot(
+                [x, x],
+                [-1.14, -1.02],
+                color="#6a879e",
+                linewidth=1.1,
+                alpha=0.9,
+                zorder=7,
+                solid_capstyle="round",
+            )
+            # Linea guida verticale leggera
+            self.ax.plot(
+                [x, x],
+                [-1.0, 1.05],
+                color="#173048",
+                linewidth=0.6,
+                alpha=0.35,
+                zorder=1,
+            )
+            label = format_hz(float(hz))
+            self.ax.text(
+                x,
+                -1.20,
+                label,
+                ha="center",
+                va="top",
+                color="#9fb6c9",
+                fontsize=8,
+                fontweight="bold",
+                zorder=8,
+            )
+
+        self.ax.text(
+            -1.2,
+            -1.20,
+            "Hz",
+            ha="left",
+            va="top",
+            color="#6a879e",
+            fontsize=8,
+            fontweight="bold",
+            zorder=8,
+        )
 
     def _build_artists(self) -> None:
         base_colors = self.cmap(np.linspace(0.12, 0.98, N_BARS))
@@ -307,6 +401,28 @@ class SpectrumVisualizer:
             markeredgewidth=0,
             alpha=0.45,
             zorder=8,
+        )
+
+        # Marcatore frequenza dominante
+        (self.peak_marker,) = self.ax.plot(
+            [0, 0],
+            [-1.0, 1.1],
+            color="#f2d06b",
+            linewidth=1.4,
+            alpha=0.75,
+            zorder=10,
+            linestyle="--",
+        )
+        self.peak_marker_label = self.ax.text(
+            0,
+            1.12,
+            "",
+            ha="center",
+            va="bottom",
+            color="#f2d06b",
+            fontsize=9,
+            fontweight="bold",
+            zorder=12,
         )
 
         # Forma d'onda in alto
@@ -437,8 +553,20 @@ class SpectrumVisualizer:
             self.peaks = np.maximum(self.peaks * 0.955, self.smoothed)
             energy = float(np.mean(self.smoothed))
             self.pulse = 0.75 * self.pulse + 0.25 * energy
+
+            # Frequenza dominante (barra più alta), con leggero smoothing
+            peak_idx = int(np.argmax(self.smoothed))
+            if self.smoothed[peak_idx] > 0.08:
+                self.peak_freq_hz = float(self.centers[peak_idx])
+                if self.peak_freq_smooth <= 0:
+                    self.peak_freq_smooth = self.peak_freq_hz
+                else:
+                    self.peak_freq_smooth = (
+                        0.72 * self.peak_freq_smooth + 0.28 * self.peak_freq_hz
+                    )
             self.status.set_text(
-                f"LIVE  ·  sensibilità {self.sensitivity:.2f}  ·  energia {energy * 100:.0f}%"
+                f"LIVE  ·  picco {format_hz(self.peak_freq_smooth or self.peak_freq_hz)}"
+                f"  ·  sens. {self.sensitivity:.2f}"
             )
             self.status.set_color("#6dffc2")
         else:
@@ -482,6 +610,23 @@ class SpectrumVisualizer:
             alpha=0.08 + 0.10 * self.pulse,
             zorder=2,
         )
+
+        # Marcatore + readout frequenza dominante
+        display_hz = self.peak_freq_smooth if self.peak_freq_smooth > 0 else self.peak_freq_hz
+        if display_hz > 0 and float(np.max(heights)) > 0.05:
+            x_peak = float(nearest_bar_index(self.centers, display_hz))
+            self.peak_marker.set_data([x_peak, x_peak], [-1.0, 1.08])
+            self.peak_marker.set_alpha(0.55 + 0.35 * self.pulse)
+            self.peak_marker_label.set_position((x_peak, 1.10))
+            self.peak_marker_label.set_text(format_hz(display_hz))
+            self.peak_marker_label.set_alpha(0.95)
+            self.freq_readout.set_text(format_hz(display_hz))
+            self.freq_readout.set_color("#f2d06b")
+        else:
+            self.peak_marker.set_alpha(0.0)
+            self.peak_marker_label.set_text("")
+            self.freq_readout.set_text("— Hz")
+            self.freq_readout.set_color("#5d7388")
 
         # Forma d'onda (normalizzata con sensibilità)
         wave = self.wave_buf * min(2.8, 0.9 + self.sensitivity * 0.7)
